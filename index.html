@@ -1,13 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Bank Risk Dashboard</title>
+<title>PRO Bank Risk Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
-body { font-family: Arial; background:#0f172a; color:white; }
-.container { width:90%; margin:auto; }
-.card { background:#1e293b; padding:20px; margin:10px; border-radius:10px; display:inline-block; }
+body { font-family:Arial; background:#020617; color:white; }
+.container { width:95%; margin:auto; }
+.card {
+  background:#0f172a;
+  padding:20px;
+  margin:10px;
+  border-radius:12px;
+  display:inline-block;
+  min-width:180px;
+}
+.table { width:100%; margin-top:20px; border-collapse:collapse;}
+.table th, .table td { padding:10px; border-bottom:1px solid #334155;}
+.red { color:#ef4444; }
+.green { color:#22c55e; }
+.yellow { color:#facc15; }
 .hidden { display:none; }
 </style>
 </head>
@@ -16,96 +29,131 @@ body { font-family: Arial; background:#0f172a; color:white; }
 
 <!-- LOGIN -->
 <div id="login">
-  <h2>Login</h2>
-  <input type="text" id="user" placeholder="Login"><br><br>
-  <input type="password" id="pass" placeholder="Password"><br><br>
-  <button onclick="login()">Kirish</button>
+<h2>🔐 Login</h2>
+<input id="user" placeholder="login"><br><br>
+<input id="pass" type="password" placeholder="parol"><br><br>
+<button onclick="login()">Kirish</button>
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="hidden container">
-  <h1>📊 Bank Risk Dashboard</h1>
+<div id="app" class="hidden container">
 
-  <div id="kpi"></div>
+<h1>🏦 PRO Bank Risk Dashboard</h1>
 
-  <canvas id="chart1"></canvas>
-  <canvas id="chart2"></canvas>
+<div id="kpi"></div>
+
+<canvas id="riskChart"></canvas>
+
+<h2>🔴 TOP Risk Projects</h2>
+<table class="table" id="riskTable"></table>
+
 </div>
 
 <script>
 
-// 🔐 LOGIN
+// 🔐 LOGIN (2 ROLE)
 function login(){
-  let u = document.getElementById("user").value;
-  let p = document.getElementById("pass").value;
+ let u = user.value;
+ let p = pass.value;
 
-  if(u==="admin" && p==="12345"){
-    document.getElementById("login").style.display="none";
-    document.getElementById("dashboard").classList.remove("hidden");
-    loadData();
-  } else {
-    alert("Noto'g'ri login/parol");
-  }
+ if(u==="admin" && p==="12345"){
+   startApp("admin");
+ } else if(u==="user" && p==="1111"){
+   startApp("user");
+ } else {
+   alert("Login xato");
+ }
 }
 
-// 📡 GOOGLE SHEETS ID
+function startApp(role){
+ login.style.display="none";
+ app.classList.remove("hidden");
+ loadData(role);
+}
+
+// 📡 GOOGLE SHEETS
 const SHEET_ID = "1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM";
 const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
-// 📊 DATA LOAD
-function loadData(){
+// 📊 LOAD DATA
+function loadData(role){
+
 fetch(URL)
-.then(res => res.text())
-.then(rep => {
-  const json = JSON.parse(rep.substr(47).slice(0,-2));
-  const rows = json.table.rows;
+.then(r=>r.text())
+.then(t=>{
 
-  let total = rows.length;
-  let problem = 0;
+const json = JSON.parse(t.substr(47).slice(0,-2));
+const rows = json.table.rows;
 
-  rows.forEach(r=>{
-    let status = r.c[5]?.v; // status column
-    if(status && status.includes("ишга тушмаган")) problem++;
-  });
+let data = [];
 
-  // KPI
-  document.getElementById("kpi").innerHTML = `
-    <div class="card">Total: ${total}</div>
-    <div class="card">Muammoli: ${problem}</div>
-    <div class="card">Risk %: ${(problem/total*100).toFixed(1)}%</div>
-  `;
+rows.forEach(r=>{
+ let obj = {
+   name: r.c[0]?.v,
+   region: r.c[1]?.v,
+   status: r.c[5]?.v,
+   amount: parseFloat(r.c[3]?.v) || 0
+ };
 
-  drawCharts(total, problem);
-});
-}
+ // 🧠 RISK SCORE
+ let score = 0;
+ if(obj.status?.includes("ишга тушмаган")) score+=40;
+ if(obj.status?.includes("кечик")) score+=30;
+ if(obj.amount>1000000000) score+=10;
 
-// 📈 CHART
-function drawCharts(total, problem){
+ obj.score = score;
 
-new Chart(document.getElementById("chart1"), {
-  type: 'pie',
-  data: {
-    labels: ['Normal', 'Risk'],
-    datasets: [{
-      data: [total-problem, problem]
-    }]
-  }
+ // rating
+ obj.rating = score>60 ? "C" : score>30 ? "B" : "A";
+
+ data.push(obj);
 });
 
-new Chart(document.getElementById("chart2"), {
-  type: 'bar',
-  data: {
-    labels: ['Projects'],
-    datasets: [{
-      label: 'Total',
-      data: [total]
-    },{
-      label: 'Risk',
-      data: [problem]
-    }]
-  }
+// KPI
+let total = data.length;
+let risk = data.filter(x=>x.rating==="C").length;
+
+kpi.innerHTML = `
+<div class="card">Projects: ${total}</div>
+<div class="card">High Risk: ${risk}</div>
+<div class="card">Risk %: ${(risk/total*100).toFixed(1)}%</div>
+`;
+
+// CHART
+new Chart(document.getElementById("riskChart"), {
+ type:'doughnut',
+ data:{
+   labels:["Safe","Risk"],
+   datasets:[{ data:[total-risk, risk] }]
+ }
 });
 
+// TOP TABLE
+let top = data.sort((a,b)=>b.score-a.score).slice(0,10);
+
+riskTable.innerHTML = `
+<tr>
+<th>Project</th>
+<th>Region</th>
+<th>Score</th>
+<th>Rating</th>
+</tr>
+`;
+
+top.forEach(x=>{
+ let color = x.rating==="C"?"red":x.rating==="B"?"yellow":"green";
+
+ riskTable.innerHTML += `
+ <tr>
+ <td>${x.name}</td>
+ <td>${x.region}</td>
+ <td>${x.score}</td>
+ <td class="${color}">${x.rating}</td>
+ </tr>
+ `;
+});
+
+});
 }
 
 </script>
