@@ -1,119 +1,190 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>AI Bank Risk Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body { font-family:Arial; background:#020617; color:white; }
-.card { background:#0f172a; padding:15px; margin:10px; border-radius:10px; display:inline-block;}
+body { font-family: Arial; background:#020617; color:white; margin:0; }
+.container { width:95%; margin:auto; padding:20px; }
+
+.card {
+  background:#0f172a;
+  padding:15px;
+  margin:10px;
+  border-radius:10px;
+  display:inline-block;
+  min-width:180px;
+}
+
+input, button {
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+button {
+  background:#2563eb;
+  color:white;
+  cursor:pointer;
+}
+
+table {
+  width:100%;
+  margin-top:20px;
+  border-collapse:collapse;
+}
+
+td, th {
+  padding:10px;
+  border-bottom:1px solid #334155;
+}
+
 .red { color:#ef4444; }
 .yellow { color:#facc15; }
 .green { color:#22c55e; }
+
 .hidden { display:none; }
-table { width:100%; margin-top:20px; }
-td,th { padding:10px; border-bottom:1px solid #334155; }
+.center { text-align:center; margin-top:100px; }
 </style>
 </head>
 
 <body>
 
-<div id="login">
-<h2>Login</h2>
-<input id="user"><br><br>
-<input id="pass" type="password"><br><br>
-<button onclick="login()">Kirish</button>
+<!-- LOGIN -->
+<div id="login" class="center">
+  <h2>🔐 Login</h2>
+  <input id="user" placeholder="Login"><br><br>
+  <input id="pass" type="password" placeholder="Parol"><br><br>
+  <button id="loginBtn">Kirish</button>
 </div>
 
-<div id="app" class="hidden">
+<!-- DASHBOARD -->
+<div id="app" class="hidden container">
 
-<h1>🤖 AI Risk Prediction Dashboard</h1>
+<h1>🤖 AI Bank Risk Dashboard</h1>
 
 <div id="kpi"></div>
 
 <canvas id="chart"></canvas>
 
-<h2>⚠️ Future Risk (AI Prediction)</h2>
+<h2>⚠️ AI Future Risk (TOP 10)</h2>
 <table id="table"></table>
 
 </div>
 
 <script>
 
-function login(){
- if(user.value==="admin" && pass.value==="12345"){
-   login.style.display="none";
-   app.classList.remove("hidden");
-   loadData();
- }
+// ELEMENTLAR
+const loginDiv = document.getElementById("login");
+const appDiv = document.getElementById("app");
+const loginBtn = document.getElementById("loginBtn");
+
+// LOGIN EVENT
+loginBtn.addEventListener("click", function(){
+  const u = document.getElementById("user").value;
+  const p = document.getElementById("pass").value;
+
+  if(u === "admin" && p === "12345"){
+    startApp();
+  } else {
+    alert("Login yoki parol noto‘g‘ri");
+  }
+});
+
+// APP START
+function startApp(){
+  loginDiv.style.display = "none";
+  appDiv.classList.remove("hidden");
+  loadData();
 }
 
-const SHEET_ID="1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM";
-const URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+// GOOGLE SHEETS
+const SHEET_ID = "1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM";
+const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
 
+// DATA LOAD
 function loadData(){
 
 fetch(URL)
-.then(r=>r.text())
-.then(t=>{
+.then(res => res.text())
+.then(text => {
 
-const json=JSON.parse(t.substr(47).slice(0,-2));
-const rows=json.table.rows;
+  const json = JSON.parse(text.substr(47).slice(0,-2));
+  const rows = json.table.rows;
 
-let data=[];
+  let data = [];
 
-rows.forEach(r=>{
+  rows.forEach(r => {
 
- let obj={
-  name:r.c[0]?.v,
-  status:r.c[5]?.v,
-  amount:parseFloat(r.c[3]?.v)||0
- };
+    let obj = {
+      name: r.c[0]?.v || "N/A",
+      status: r.c[5]?.v || "",
+      amount: parseFloat(r.c[3]?.v) || 0
+    };
 
- // 🧠 AI PREDICTION
- let pd=0;
+    // AI PREDICTION
+    let pd = 0;
 
- if(obj.status?.includes("ишга тушмаган")) pd+=40;
- if(obj.status?.includes("кечик")) pd+=25;
- if(obj.amount>1000000000) pd+=15;
+    if(obj.status.includes("ишга тушмаган")) pd += 40;
+    if(obj.status.includes("кечик")) pd += 25;
+    if(obj.amount > 1000000000) pd += 15;
 
- obj.pd=pd;
+    obj.pd = pd;
 
- obj.level = pd>60 ? "HIGH" : pd>30 ? "MEDIUM" : "LOW";
+    obj.level =
+      pd > 60 ? "HIGH" :
+      pd > 30 ? "MEDIUM" : "LOW";
 
- data.push(obj);
+    data.push(obj);
+  });
 
+  renderDashboard(data);
+
+})
+.catch(err => {
+  alert("Google Sheets ulanmagan yoki noto‘g‘ri ID");
+  console.error(err);
 });
 
-// KPI
-let high=data.filter(x=>x.level==="HIGH").length;
+}
 
-kpi.innerHTML=`
-<div class="card">Total: ${data.length}</div>
-<div class="card red">High Risk: ${high}</div>
-<div class="card">Share: ${(high/data.length*100).toFixed(1)}%</div>
+// RENDER
+function renderDashboard(data){
+
+const kpiDiv = document.getElementById("kpi");
+const table = document.getElementById("table");
+
+// KPI
+const total = data.length;
+const high = data.filter(x => x.level === "HIGH").length;
+
+kpiDiv.innerHTML = `
+  <div class="card">Total: ${total}</div>
+  <div class="card red">High Risk: ${high}</div>
+  <div class="card">Share: ${(high/total*100).toFixed(1)}%</div>
 `;
 
 // CHART
-new Chart(chart,{
- type:"bar",
- data:{
-  labels:["LOW","MEDIUM","HIGH"],
-  datasets:[{
-   data:[
-    data.filter(x=>x.level==="LOW").length,
-    data.filter(x=>x.level==="MEDIUM").length,
-    data.filter(x=>x.level==="HIGH").length
-   ]
-  }]
- }
+new Chart(document.getElementById("chart"), {
+  type: "bar",
+  data: {
+    labels: ["LOW","MEDIUM","HIGH"],
+    datasets: [{
+      data: [
+        data.filter(x=>x.level==="LOW").length,
+        data.filter(x=>x.level==="MEDIUM").length,
+        data.filter(x=>x.level==="HIGH").length
+      ]
+    }]
+  }
 });
 
-// TABLE
-let top=data.sort((a,b)=>b.pd-a.pd).slice(0,10);
+// TOP 10
+let top = data.sort((a,b)=>b.pd-a.pd).slice(0,10);
 
-table.innerHTML=`
+table.innerHTML = `
 <tr>
 <th>Project</th>
 <th>PD %</th>
@@ -121,19 +192,20 @@ table.innerHTML=`
 </tr>
 `;
 
-top.forEach(x=>{
- let color=x.level==="HIGH"?"red":x.level==="MEDIUM"?"yellow":"green";
+top.forEach(x => {
+  let color =
+    x.level==="HIGH" ? "red" :
+    x.level==="MEDIUM" ? "yellow" : "green";
 
- table.innerHTML+=`
- <tr>
- <td>${x.name}</td>
- <td>${x.pd}%</td>
- <td class="${color}">${x.level}</td>
- </tr>
- `;
+  table.innerHTML += `
+  <tr>
+    <td>${x.name}</td>
+    <td>${x.pd}%</td>
+    <td class="${color}">${x.level}</td>
+  </tr>
+  `;
 });
 
-});
 }
 
 </script>
