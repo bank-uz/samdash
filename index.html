@@ -135,7 +135,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);line-he
 // ║  ⚙️  SOZLAMALAR — FAQAT SHU 2 QATORNI O'ZGARTIRING       ║
 // ╚═══════════════════════════════════════════════════════════╝
 
-const SHEET_ID = '1JXHUuAsnddV8x28xXCsnydUN-Do5fOPXz6tqrdWHrTU';               // ← GOOGLE SHEET ID
+const SHEET_ID = '180eZOcVyK6i3Wk-KYrXZhFBzQPYG8-ZXWD2E9ah1JW0';               // ← GOOGLE SHEET ID
 const PASSWORD = 'samarqand2026';  // ← PAROL
 
 // TAYYORLASH:
@@ -188,7 +188,6 @@ function gp(v){return v!=null&&Math.abs(v)<1&&v!==0?v*100:(v||0)}
 function gs(c){const v=gv(c);return v!=null?String(v):''}
 
 function parse(rows){
-  // 1) Raw ma'lumotlarni 2D array ga o'tkazamiz
   const data=[];
   for(let i=0;i<rows.length;i++){
     const r=rows[i].c||[];
@@ -197,55 +196,48 @@ function parse(rows){
     data.push(row);
   }
 
-  // 2) Bo'limlarni marker kalit so'zlar orqali topamiz
-  function findRow(keywords){
-    for(let i=0;i<data.length;i++){
-      const c1=gs(data[i][1]).toLowerCase();
-      const c0=gs(data[i][0]).toLowerCase();
-      const combined=c0+' '+c1;
-      if(keywords.every(k=>combined.includes(k.toLowerCase()))) return i;
+  // SARLAVHA qatorlarini topish (bu bo'limlar orasidagi CHEGARA)
+  const headers=[];
+  for(let i=0;i<data.length;i++){
+    const b=gs(data[i][1]).toLowerCase();
+    const a=gs(data[i][0]).toLowerCase();
+    if(b.includes('удуд')&&b.includes('номи')) headers.push({i,type:'viloyat'});
+    else if(b.includes('туман')&&b.includes('номи')) headers.push({i,type:'tuman'});
+    else if(b.includes('банк')&&b.includes('номи')) headers.push({i,type:'bank'});
+    else if(b.includes('тармоқ')&&b.includes('номи')) headers.push({i,type:'tarmoq'});
+    else if(b.includes('мавжуд')&&b.includes('муаммолар')) headers.push({i,type:'muammo'});
+    else if(a.includes('марказий')&&a.includes('банк')) headers.push({i,type:'mb_title'});
+  }
+  console.log('Headers:',headers);
+
+  // Har bir header dan KEYINGI headergacha data qatorlarini yig'ish
+  function getEnd(hIdx){
+    for(let h=0;h<headers.length;h++){
+      if(headers[h].i===hIdx&&h+1<headers.length) return headers[h+1].i;
     }
-    return -1;
+    return data.length;
   }
 
-  // Viloyat summary: "Самарқанд вилояти" yoki B ustunida viloyat nomi
+  function collectBetween(start,end){
+    const result=[];
+    for(let i=start;i<end;i++){
+      const num=gn(data[i][0]);
+      const name=gs(data[i][1]);
+      if(num>0&&name.length>1) result.push(data[i]);
+    }
+    return result;
+  }
+
+  // Viloyat
+  const vilH=headers.find(h=>h.type==='viloyat');
+  const vilEnd=vilH?getEnd(vilH.i):3;
   let vilRow=-1;
-  for(let i=0;i<data.length;i++){
-    const v=gs(data[i][1]);
-    if(v.includes('вилояти')&&gn(data[i][2])>0){vilRow=i;break}
+  if(vilH){
+    for(let i=vilH.i+1;i<vilEnd;i++){
+      if(gs(data[i][1]).includes('вилояти')&&gn(data[i][2])>0){vilRow=i;break}
+    }
   }
 
-  // Tumanlar: "Туман" yoki "шаҳар" header dan keyin raqamli qatorlar
-  let tumanStart=-1;
-  for(let i=0;i<data.length;i++){
-    const v=gs(data[i][1]);
-    if(v.includes('Туман')&&v.includes('номи')){tumanStart=i+1;break}
-  }
-
-  // Banklar: "Банк номи" header
-  let bankStart=-1;
-  for(let i=0;i<data.length;i++){
-    const v=gs(data[i][1]);
-    if(v.includes('Банк')&&v.includes('номи')){bankStart=i+1;break}
-  }
-
-  // Tarmoqlar: "Тармоқ номи" header
-  let tarmoqStart=-1;
-  for(let i=0;i<data.length;i++){
-    const v=gs(data[i][1]);
-    if(v.includes('Тармоқ')&&v.includes('номи')){tarmoqStart=i+1;break}
-  }
-
-  // Muammolar: "Мавжуд муаммолар" header
-  let muamStart=-1;
-  for(let i=0;i<data.length;i++){
-    const v=gs(data[i][1]);
-    if(v.includes('Мавжуд')&&v.includes('муаммолар')){muamStart=i+1;break}
-  }
-
-  console.log('Topilgan bo\'limlar:',{vilRow,tumanStart,bankStart,tarmoqStart,muamStart});
-
-  // 3) Viloyat umumiy
   const V={total:0,totalSum:0,fin:0,finSum:0,bank:0,bankSum:0,stopped:0,stoppedSum:0,
     prospect:0,prospectSum:0,plan26:0,plan26Sum:0,crSoni:0,crSum:0,
     npl:0,nplSum:0,nplPct:0,launched:0,launchedSum:0,notL:0,notLSum:0};
@@ -259,43 +251,38 @@ function parse(rows){
     V.notL=gn(r[21]);V.notLSum=gn(r[22]);
   }
 
-  // 4) Helper: ketma-ket raqamli qatorlarni yig'ish (tartib raqami bor = data row)
-  function collectRows(start,maxGap){
-    if(start<0)return[];
-    const result=[];let gap=0;
-    for(let i=start;i<data.length;i++){
-      const num=gn(data[i][0]);
-      const name=gs(data[i][1]);
-      if(num>0&&name){result.push(data[i]);gap=0}
-      else{gap++;if(gap>maxGap)break}
-    }
-    return result;
-  }
-
-  // 5) Tumanlar (25 ta ustun — tuman/bank bir xil struktura)
-  const T=collectRows(tumanStart,2).map(r=>({
+  // Tumanlar
+  const tumH=headers.find(h=>h.type==='tuman');
+  const tumEnd=tumH?getEnd(tumH.i):0;
+  const T=tumH?collectBetween(tumH.i+1,tumEnd).map(r=>({
     nm:gs(r[1]),tot:gn(r[2]),cr:gn(r[3]),fin:gn(r[4]),fS:gn(r[5]),bk:gn(r[6]),bS:gn(r[7]),
     st:gn(r[8]),cqS:gn(r[14]),cqSm:gn(r[15]),npl:gn(r[16]),nplS:gn(r[17]),nplP:gp(gn(r[18])),
-    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])}));
+    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])})):[];
 
-  // 6) Banklar
-  const B=collectRows(bankStart,2).map(r=>({
+  // Banklar
+  const bnkH=headers.find(h=>h.type==='bank');
+  const bnkEnd=bnkH?getEnd(bnkH.i):0;
+  const B=bnkH?collectBetween(bnkH.i+1,bnkEnd).map(r=>({
     nm:gs(r[1]),tot:gn(r[2]),cr:gn(r[3]),fin:gn(r[4]),fS:gn(r[5]),bk:gn(r[6]),bS:gn(r[7]),
     st:gn(r[8]),cqS:gn(r[14]),cqSm:gn(r[15]),npl:gn(r[16]),nplS:gn(r[17]),nplP:gp(gn(r[18])),
-    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])}));
+    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])})):[];
 
-  // 7) Tarmoqlar (faqat 9 ta ustun: 0-8)
-  const S=collectRows(tarmoqStart,2).map(r=>({
+  // Tarmoqlar
+  const secH=headers.find(h=>h.type==='tarmoq');
+  const secEnd=secH?getEnd(secH.i):0;
+  const S=secH?collectBetween(secH.i+1,secEnd).map(r=>({
     nm:gs(r[1]),pr:gn(r[2]),cr:gn(r[3]),qS:gn(r[4]),qSm:gn(r[5]),
-    npl:gn(r[6]),nplS:gn(r[7]),nplP:gp(gn(r[8]))}));
+    npl:gn(r[6]),nplS:gn(r[7]),nplP:gp(gn(r[8]))})):[];
 
-  // 8) Muammolar (16 ta ustun: 0-15)
-  const M=collectRows(muamStart,2).map(r=>({
+  // Muammolar
+  const muH=headers.find(h=>h.type==='muammo');
+  const muEnd=muH?getEnd(muH.i):0;
+  const M=muH?collectBetween(muH.i+1,muEnd).map(r=>({
     lb:gs(r[1]),sot:gn(r[2]),sotK:gn(r[3]),tsh:gn(r[4]),tshK:gn(r[5]),
     pul:gn(r[6]),pulK:gn(r[7]),deb:gn(r[8]),debS:gn(r[9]),
-    krd:gn(r[10]),krdS:gn(r[11]),npl:gn(r[12]),oil:gn(r[13]),ryx:gn(r[14]),fao:gn(r[15])}));
+    krd:gn(r[10]),krdS:gn(r[11]),npl:gn(r[12]),oil:gn(r[13]),ryx:gn(r[14]),fao:gn(r[15])})):[];
 
-  console.log('Parsed:',{V_total:V.total,T_len:T.length,B_len:B.length,S_len:S.length,M_len:M.length});
+  console.log('Parsed:',{V_total:V.total,T:T.length,B:B.length,S:S.length,M:M.length});
   return{V,T,B,S,M};
 }
 
