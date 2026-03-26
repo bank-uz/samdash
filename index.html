@@ -1,917 +1,432 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Samarqand Viloyati | Hududiy Dasturlar va Bank Tizimi Tahlili</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'Tahoma', 'Geneva', 'Verdana', sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            min-height: 100vh;
-            position: relative;
-        }
-
-        /* Login Panel */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(8px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            transition: all 0.3s ease;
-        }
-
-        .login-card {
-            background: white;
-            border-radius: 24px;
-            padding: 40px;
-            width: 380px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .login-card h2 {
-            color: #1e3c72;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-
-        .login-card .subtitle {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .login-card input {
-            width: 100%;
-            padding: 14px 16px;
-            margin: 12px 0;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 16px;
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .login-card input:focus {
-            border-color: #1e3c72;
-            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
-        }
-
-        .login-card button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .login-card button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(30, 60, 114, 0.4);
-        }
-
-        .error-message {
-            color: #dc2626;
-            font-size: 14px;
-            margin-top: 12px;
-            display: none;
-        }
-
-        /* Dashboard */
-        .dashboard-wrapper {
-            display: none;
-            padding: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        .dashboard-header {
-            background: white;
-            border-radius: 24px;
-            padding: 24px 32px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .dashboard-header h1 {
-            color: #1e3c72;
-            font-size: 28px;
-            margin-bottom: 8px;
-        }
-
-        .dashboard-header .date-info {
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .pdf-button {
-            margin-top: 16px;
-            padding: 10px 24px;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .pdf-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-box {
-            background: white;
-            border-radius: 20px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .stat-box:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-box .stat-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
-
-        .stat-box .stat-label {
-            color: #64748b;
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 8px;
-        }
-
-        .stat-box .stat-value {
-            font-size: 36px;
-            font-weight: 800;
-            color: #1e3c72;
-        }
-
-        .stat-box .stat-unit {
-            font-size: 14px;
-            color: #64748b;
-            margin-left: 4px;
-        }
-
-        /* Charts Grid */
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .chart-card h3 {
-            color: #1e3c72;
-            margin-bottom: 20px;
-            font-size: 18px;
-            font-weight: 600;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        .full-width {
-            grid-column: 1 / -1;
-        }
-
-        /* Tables */
-        .table-container {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 24px;
-            overflow-x: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .table-container h3 {
-            color: #1e3c72;
-            margin-bottom: 16px;
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f8fafc;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #1e3c72;
-            border-bottom: 2px solid #e2e8f0;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #334155;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-yaxshi {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .status-orta {
-            background: #fed7aa;
-            color: #92400e;
-        }
-
-        .status-muammoli {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        /* Recommendations */
-        .recommendations-card {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border-radius: 20px;
-            padding: 24px;
-            margin-top: 24px;
-            border-left: 6px solid #f59e0b;
-        }
-
-        .recommendations-card h3 {
-            color: #92400e;
-            margin-bottom: 16px;
-            font-size: 20px;
-        }
-
-        .recommendations-card p {
-            color: #78350f;
-            line-height: 1.6;
-            margin-bottom: 12px;
-        }
-
-        .recommendations-card ul {
-            margin-left: 20px;
-            margin-top: 10px;
-        }
-
-        .recommendations-card li {
-            margin: 8px 0;
-            color: #78350f;
-        }
-
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-            .dashboard-header h1 {
-                font-size: 20px;
-            }
-            .stat-value {
-                font-size: 28px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Самарқанд вилояти — Ҳудудий дастурлар ижроси</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+#lockScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#0f2027,#203a43 40%,#2c5364);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.lkb{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:48px 44px;text-align:center;width:420px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.lkb .ic{width:72px;height:72px;border-radius:50%;margin:0 auto 24px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 32px rgba(99,102,241,.4)}
+.lkb h2{color:#fff;font-size:20px;font-weight:700;margin-bottom:6px}
+.lkb p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:28px}
+.lki{width:100%;padding:14px 18px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:.3s}
+.lki:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 20px rgba(99,102,241,.15)}
+.lki::placeholder{color:rgba(255,255,255,.3)}
+.lkbt{width:100%;margin-top:16px;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s}
+.lkbt:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+.lke{color:#f87171;font-size:12px;margin-top:12px;display:none}
+#loadScr{display:none;position:fixed;inset:0;z-index:9998;background:#f0f4f8;align-items:center;justify-content:center;flex-direction:column;font-family:'Inter',sans-serif}
+#loadScr.on{display:flex}
+.ldr{width:56px;height:56px;border:4px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ldt{font-size:15px;font-weight:600;color:#0f172a}.lds{font-size:12px;color:#64748b;margin-top:6px}
+.lderr{color:#dc2626;font-size:13px;margin-top:16px;display:none;max-width:520px;text-align:center;line-height:1.7}
+#dashboard{display:none}
+:root{--bg:#f0f4f8;--cd:#fff;--cd2:#f8fafc;--ac:#2563eb;--ac2:#4f46e5;--gn:#059669;--rd:#dc2626;--am:#d97706;--cy:#0891b2;--pk:#db2777;--tx:#0f172a;--tx2:#64748b;--br:#e2e8f0;--br2:#cbd5e1;--sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shl:0 10px 40px rgba(0,0,0,.08)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh}
+.hero{background:linear-gradient(135deg,#1e3a5f,#1e40af 40%,#3b82f6);padding:40px 40px 34px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(30,64,175,.2)}
+.hero::before{content:'';position:absolute;top:-40%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
+.hi{max-width:1440px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hero h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.hsub{color:rgba(255,255,255,.75);font-size:13px;margin-top:4px}
+.hdt{display:inline-block;margin-top:10px;padding:5px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;font-size:12px;color:#fff}
+.bdl{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#fff;color:#1e40af;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:.2s}
+.bdl:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.bdl svg{width:18px;height:18px}
+.ctn{max-width:1440px;margin:0 auto;padding:28px 40px 50px}
+.gsb{background:linear-gradient(135deg,rgba(5,150,105,.06),rgba(8,145,178,.06));border:1px solid rgba(5,150,105,.2);border-radius:12px;padding:12px 20px;margin-bottom:24px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--tx2)}
+.gsd{width:8px;height:8px;border-radius:50%;background:#059669;box-shadow:0 0 8px rgba(5,150,105,.5);animation:pu 2s infinite;flex-shrink:0}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+.kps{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px}
+.kc{background:var(--cd);border:1px solid var(--br);border-radius:14px;padding:18px 16px;box-shadow:var(--sh);transition:.2s}
+.kc:hover{transform:translateY(-2px);box-shadow:var(--shl)}
+.ki{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
+.kv{font-size:25px;font-weight:800;letter-spacing:-1px}.kl{font-size:11px;color:var(--tx2);margin-top:2px;line-height:1.4}
+.kss{font-size:10px;color:var(--tx2);margin-top:6px;padding-top:6px;border-top:1px solid var(--br)}
+.sec{margin-bottom:34px}.sh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.stt{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.cd{background:var(--cd);border:1px solid var(--br);border-radius:14px;padding:20px;overflow:hidden;box-shadow:var(--sh)}
+.ctt{font-size:12px;font-weight:600;color:var(--tx2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt thead th{text-align:left;padding:9px 10px;color:var(--tx2);font-weight:600;border-bottom:2px solid var(--br);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;background:var(--cd2)}
+.dt tbody td{padding:8px 10px;border-bottom:1px solid var(--br)}
+.dt tbody tr:hover{background:rgba(37,99,235,.03)}
+.dt .n{text-align:right;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.dt .hl{color:var(--am);font-weight:600}.dt .bad{color:var(--rd);font-weight:600}.dt .gd{color:var(--gn);font-weight:600}
+.cb{position:relative;height:310px}.cbs{position:relative;height:250px}
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--ac),var(--ac2),var(--gn))}
+.ti{position:relative;margin-bottom:22px}
+.ti::before{content:'';position:absolute;left:-22px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--ac);border:3px solid var(--bg)}
+.ti:last-child::before{background:var(--gn)}
+.td{font-size:13px;font-weight:700;color:var(--ac);margin-bottom:5px}
+.tc{background:var(--cd2);border:1px solid var(--br);border-radius:10px;padding:14px}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.tm{text-align:center}.tm .v{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace}.tm .l{font-size:9.5px;color:var(--tx2);margin-top:1px}
+.rc{background:linear-gradient(135deg,rgba(5,150,105,.05),rgba(8,145,178,.05));border:1px solid rgba(5,150,105,.15);border-radius:12px;padding:14px 18px;margin-bottom:9px;font-size:13px;line-height:1.6}
+.rc .rn{display:inline-flex;width:22px;height:22px;border-radius:6px;background:rgba(5,150,105,.12);color:var(--gn);align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-right:8px}
+.footer{text-align:center;padding:24px 40px;color:var(--tx2);font-size:11px;border-top:1px solid var(--br);background:var(--cd)}
+.pov{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
+.pov.on{display:flex}.psp{background:#fff;border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.psp .ps{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--br2);border-radius:3px}
+@media(max-width:1200px){.kps{grid-template-columns:repeat(3,1fr)}.g2,.g3{grid-template-columns:1fr}}
+@media(max-width:768px){.kps{grid-template-columns:repeat(2,1fr)}.hero{padding:24px 16px}.hero h1{font-size:18px}.ctn{padding:16px}.tg{grid-template-columns:1fr 1fr}.hi{flex-direction:column;align-items:flex-start}}
+</style>
 </head>
 <body>
-    <!-- Login Panel -->
-    <div class="login-overlay" id="loginOverlay">
-        <div class="login-card">
-            <h2>🏛️ Samarqand Viloyati</h2>
-            <div class="subtitle">Hududiy Dasturlar va Bank Tizimi Tahlili</div>
-            <input type="password" id="passwordInput" placeholder="Dashboard parolini kiriting" onkeypress="handleEnter(event)">
-            <button onclick="verifyPassword()">Kirish</button>
-            <div class="error-message" id="errorMessage">❌ Parol noto'g'ri! Qaytadan urinib ko'ring.</div>
-        </div>
-    </div>
+<div id="lockScreen"><div class="lkb"><div class="ic">🔐</div><h2>Дашборд кириш</h2><p>Самарқанд вилояти — Ҳудудий дастурлар мониторинги</p>
+<input type="password" class="lki" id="pi" placeholder="Паролни киритинг..." autocomplete="off">
+<button class="lkbt" onclick="chkP()">Кириш →</button><div class="lke" id="pe">❌ Парол нотўғри</div></div></div>
 
-    <!-- Dashboard -->
-    <div class="dashboard-wrapper" id="dashboardWrapper">
-        <div class="dashboard-header">
-            <h1>🏛️ Samarqand Viloyati Hududiy Dasturlar va Bank Tizimi Tahlili</h1>
-            <div class="date-info">📅 Yangilangan sana: 26-mart, 2026 | 📊 Ma'lumotlar Google Sheets orqali yuklanadi</div>
-            <button class="pdf-button" onclick="generatePDF()">📄 PDF Hisobotni Yuklab Olish</button>
-        </div>
+<div id="loadScr"><div class="ldr"></div><div class="ldt">Google Sheets дан маълумот юкланмоқда...</div>
+<div class="lds" id="lds">Илтимос, кутинг</div><div class="lderr" id="lde"></div></div>
 
-        <div class="stats-grid" id="statsGrid"></div>
+<div class="pov" id="pov"><div class="psp"><div class="ps"></div><div style="font-size:14px;font-weight:600;color:#0f172a">PDF тайёрланмоқда...</div></div></div>
 
-        <div class="charts-grid">
-            <div class="chart-card">
-                <h3>🏙️ Tumanlar kesimida dastur ijrosi</h3>
-                <canvas id="districtChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>🏦 Banklar kesimida kreditlash ko'rsatkichlari</h3>
-                <canvas id="bankChart"></canvas>
-            </div>
-            <div class="chart-card">
-                <h3>🏭 Tarmoqlar kesimida investitsiya o'zlashtirish</h3>
-                <canvas id="sectorChart"></canvas>
-            </div>
-            <div class="chart-card full-width">
-                <h3>⚠️ Muammoli yo'nalishlar va bartaraf etish holati</h3>
-                <canvas id="problemsChart"></canvas>
-            </div>
-        </div>
+<div id="dashboard">
+<div class="hero"><div class="hi"><div><h1>Самарқанд вилояти — Ҳудудий дастурлар ижроси</h1>
+<div class="hsub">2018–2026 йилларда амалга оширилган лойиҳалар мониторинги ва банк тизими таҳлили</div>
+<div class="hdt">📅 2026 йил 1 март ҳолатига</div></div>
+<div><button class="bdl" onclick="dlPDF()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF юклаш</button></div>
+</div></div>
+<div class="ctn" id="mc">
+<div class="gsb"><div class="gsd"></div><span>Google Sheets дан реал вақтда маълумот олинмоқда</span></div>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--ac),var(--ac2))">1</div><div class="stt">Вилоятнинг умумий кўрсаткичлари</div></div>
+<div class="kps" id="kpiS"></div><div class="g3" id="kpiX" style="margin-bottom:10px"></div></div>
 
-        <div class="table-container">
-            <h3>📋 Tumanlar bo'yicha batafsil tahlil</h3>
-            <div id="districtTable"></div>
-        </div>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--cy),var(--ac))">2</div><div class="stt">Туман (шаҳар)лар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ctt">Лойиҳалар сони</div><div class="cb"><canvas id="cTP"></canvas></div></div>
+<div class="cd"><div class="ctt">Кредит суммаси (млрд сўм)</div><div class="cb"><canvas id="cTC"></canvas></div></div></div>
+<div class="cd"><div class="ctt">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tT"><thead><tr><th>Туман/шаҳар</th><th class="n">Жами</th><th class="n">Кредит</th><th class="n">Молиял.</th><th class="n">Тушган</th><th class="n">Тушмаган</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
 
-        <div class="table-container">
-            <h3>🏦 Banklar bo'yicha batafsil tahlil</h3>
-            <div id="bankTable"></div>
-        </div>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--ac2),var(--pk))">3</div><div class="stt">Банклар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ctt">Лойиҳалар тақсимоти</div><div class="cb"><canvas id="cBP"></canvas></div></div>
+<div class="cd"><div class="ctt">NPL таҳлили (млрд сўм)</div><div class="cb"><canvas id="cBN"></canvas></div></div></div>
+<div class="cd"><div class="ctt">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tB"><thead><tr><th>Банк номи</th><th class="n">Лойиҳа</th><th class="n">Кредит</th><th class="n">Молиял.</th><th class="n">Тушган</th><th class="n">Тушмаган</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
 
-        <div class="table-container">
-            <h3>🏭 Tarmoqlar bo'yicha batafsil tahlil</h3>
-            <div id="sectorTable"></div>
-        </div>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--gn),var(--cy))">4</div><div class="stt">Тармоқлар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ctt">Топ-10 кредит (млрд)</div><div class="cb"><canvas id="cSC"></canvas></div></div>
+<div class="cd"><div class="ctt">NPL таҳлили</div><div class="cb"><canvas id="cSN"></canvas></div></div></div>
+<div class="cd"><div class="ctt">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tS"><thead><tr><th>Тармоқ</th><th class="n">Лойиҳа</th><th class="n">Кредит</th><th class="n">Қолд.</th><th class="n">Қолдиқ</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
 
-        <div class="recommendations-card" id="recommendationsCard">
-            <h3>📋 Tahliliy xulosa va tavsiyalar</h3>
-            <div id="recommendationsContent"></div>
-        </div>
-    </div>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--rd),var(--am))">5</div><div class="stt">Марказий банк раиси топшириғи — муаммоларни бартараф этиш</div></div>
+<div class="cd" style="margin-bottom:16px"><div class="ctt">Динамика</div><div class="tl" id="tlBox"></div></div>
+<div class="g2"><div class="cd"><div class="ctt">NPL динамикаси (млрд)</div><div class="cbs"><canvas id="cNT"></canvas></div></div>
+<div class="cd"><div class="ctt">Дебитор динамикаси (сони)</div><div class="cbs"><canvas id="cDT"></canvas></div></div></div></div>
 
-    <script>
-        // ==================== KONFIGURATSIYA ====================
-        const DASHBOARD_PASSWORD = "samarqand2024";
-        const GOOGLE_SHEET_ID = "1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM"; // O'zingizning Sheet ID ni shu yerga kiriting
-        
-        // Default ma'lumotlar (agar Google Sheet yuklanmasa ishlaydi)
-        const DEFAULT_DATA = {
-            districts: [
-                { name: "Samarqand shahar", value: 92.5, status: "Yaxshi" },
-                { name: "Bulung'ur", value: 78.3, status: "O'rtacha" },
-                { name: "Jomboy", value: 82.1, status: "Yaxshi" },
-                { name: "Ishtixon", value: 75.8, status: "O'rtacha" },
-                { name: "Kattaqo'rg'on", value: 88.4, status: "Yaxshi" },
-                { name: "Narpay", value: 71.2, status: "Muammoli" },
-                { name: "Oqdaryo", value: 79.5, status: "O'rtacha" },
-                { name: "Paxtachi", value: 84.7, status: "Yaxshi" },
-                { name: "Qo'shrabot", value: 73.9, status: "O'rtacha" },
-                { name: "Samarqand tumani", value: 86.2, status: "Yaxshi" },
-                { name: "Toyloq", value: 81.6, status: "Yaxshi" },
-                { name: "Urgut", value: 76.4, status: "O'rtacha" }
-            ],
-            banks: [
-                { name: "NBU", value: 85.3, status: "Yaxshi" },
-                { name: "Agrobank", value: 78.9, status: "O'rtacha" },
-                { name: "Qishloq Qurilish Bank", value: 72.4, status: "O'rtacha" },
-                { name: "Xalq Banki", value: 81.7, status: "Yaxshi" },
-                { name: "SQB", value: 75.2, status: "O'rtacha" },
-                { name: "Ipak Yo'li Banki", value: 69.8, status: "Muammoli" },
-                { name: "Turon Bank", value: 73.5, status: "O'rtacha" },
-                { name: "Asaka Bank", value: 77.1, status: "Yaxshi" }
-            ],
-            sectors: [
-                { name: "Qishloq xo'jaligi", value: 82.3, status: "Yaxshi" },
-                { name: "Sanoat", value: 74.6, status: "O'rtacha" },
-                { name: "Xizmat ko'rsatish", value: 79.1, status: "O'rtacha" },
-                { name: "Qurilish", value: 68.4, status: "Muammoli" },
-                { name: "Transport", value: 71.5, status: "O'rtacha" },
-                { name: "Turizm", value: 76.8, status: "O'rtacha" },
-                { name: "Energetika", value: 84.2, status: "Yaxshi" }
-            ],
-            problems: {
-                "Kredit resurslari yetishmovchiligi": 65,
-                "Garov ta'minoti muammolari": 72,
-                "Qaytarish muddatlari buzilishi": 58,
-                "Bank xizmatlaridan foydalanish darajasi": 45,
-                "Hududiy bank filiallari faoliyati": 53,
-                "Kreditlar bo'yicha qarzlar": 48,
-                "Investitsiya loyihalarini moliyalashtirish": 62
-            }
-        };
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--am),var(--rd))">6</div><div class="stt">Муаммоли йўналишлар ва тавсиялар</div></div>
+<div class="g2" style="margin-bottom:18px"><div class="cd" style="border-left:3px solid var(--rd)" id="prC"></div><div class="cd" style="border-left:3px solid var(--gn)" id="poC"></div></div>
+<div id="rcB"></div></div>
+</div>
+<div class="footer">Самарқанд вилояти ҳудудий дастурлар мониторинги · Маълумот манбаи: Марказий банк ҳудудий бошқармаси</div>
+</div>
 
-        let chartData = null;
-        let charts = {};
+<script>
+// ╔═══════════════════════════════════════════════════════════╗
+// ║  ⚙️  SOZLAMALAR — FAQAT SHU 2 QATORNI O'ZGARTIRING       ║
+// ╚═══════════════════════════════════════════════════════════╝
 
-        // ==================== PAROL TEKSHIRISH ====================
-        function verifyPassword() {
-            const password = document.getElementById('passwordInput').value;
-            if (password === DASHBOARD_PASSWORD) {
-                document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('dashboardWrapper').style.display = 'block';
-                loadData();
-            } else {
-                document.getElementById('errorMessage').style.display = 'block';
-                setTimeout(() => {
-                    document.getElementById('errorMessage').style.display = 'none';
-                }, 3000);
-            }
-        }
+const SHEET_ID = '1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM';               // ← GOOGLE SHEET ID
+const PASSWORD = 'samarqand2026';  // ← PAROL
 
-        function handleEnter(event) {
-            if (event.key === 'Enter') {
-                verifyPassword();
-            }
-        }
+// TAYYORLASH:
+// 1. Excel → Google Drive ga yuklang → Google Sheets da oching
+// 2. File → Share → Publish to web → Entire Document → Publish
+// 3. URL dan ID ni oling va yuqoriga qo'ying
+// 4. GitHub repo ga index.html yuklang → Settings → Pages → Deploy
 
-        // ==================== GOOGLE SHEETS MA'LUMOTLARINI YUKLASH ====================
-        async function loadData() {
-            showLoading();
-            
-            try {
-                // Google Sheets dan ma'lumotlarni olish
-                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json`;
-                const response = await fetch(url);
-                const text = await response.text();
-                const json = JSON.parse(text.substring(47, text.length - 2));
-                
-                const rows = json.table.rows;
-                const data = [];
-                
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    const rowData = [];
-                    for (let j = 0; j < row.c.length; j++) {
-                        rowData.push(row.c[j] ? row.c[j].v : '');
-                    }
-                    data.push(rowData);
-                }
-                
-                // Ma'lumotlarni qayta ishlash
-                if (data.length > 1) {
-                    processSheetData(data);
-                } else {
-                    useDefaultData();
-                }
-            } catch (error) {
-                console.log("Google Sheet yuklanmadi, default ma'lumotlar ishlatiladi:", error);
-                useDefaultData();
-            }
-        }
+// ═══════════════════════════════════════════════════════════
+document.getElementById('pi').addEventListener('keydown',e=>{if(e.key==='Enter')chkP()});
+function chkP(){
+  if(document.getElementById('pi').value===PASSWORD){
+    document.getElementById('lockScreen').style.display='none';go();
+  }else{const e=document.getElementById('pe');e.style.display='block';document.getElementById('pi').value='';setTimeout(()=>e.style.display='none',3000)}
+}
+function go(){
+  document.getElementById('loadScr').classList.add('on');
+  if(!SHEET_ID){document.getElementById('lds').textContent='';const e=document.getElementById('lde');e.style.display='block';
+    e.innerHTML='❌ <b>SHEET_ID kiritilmagan!</b><br><br>index.html faylida <code>const SHEET_ID = \'\';</code> qatoriga Google Sheet ID kiriting.';return}
+  load();
+}
 
-        function processSheetData(data) {
-            const districts = [];
-            const banks = [];
-            const sectors = [];
-            
-            for (let i = 1; i < data.length; i++) {
-                const row = data[i];
-                if (row.length >= 5 && row[4] === 'Tuman') {
-                    districts.push({
-                        name: row[0] || 'Noma\'lum',
-                        value: parseFloat(row[2]) || 0,
-                        status: row[3] || 'O\'rtacha'
-                    });
-                } else if (row.length >= 5 && row[4] === 'Bank') {
-                    banks.push({
-                        name: row[0] || 'Noma\'lum',
-                        value: parseFloat(row[2]) || 0,
-                        status: row[3] || 'O\'rtacha'
-                    });
-                } else if (row.length >= 5 && row[4] === 'Tarmoq') {
-                    sectors.push({
-                        name: row[0] || 'Noma\'lum',
-                        value: parseFloat(row[2]) || 0,
-                        status: row[3] || 'O\'rtacha'
-                    });
-                }
-            }
-            
-            chartData = {
-                districts: districts.length ? districts : DEFAULT_DATA.districts,
-                banks: banks.length ? banks : DEFAULT_DATA.banks,
-                sectors: sectors.length ? sectors : DEFAULT_DATA.sectors,
-                problems: DEFAULT_DATA.problems
-            };
-            
-            renderDashboard();
-        }
+async function load(){
+  try{
+    document.getElementById('lds').textContent='Google Sheets ga ulanilmoqda...';
+    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+    const t=await r.text();
+    const m=t.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);
+    if(!m)throw new Error('"Publish to web" qilinganligini tekshiring');
+    const j=JSON.parse(m[1]);
+    if(!j.table||!j.table.rows||j.table.rows.length<10)throw new Error('Yetarli ma\'lumot topilmadi');
+    document.getElementById('lds').textContent='Ma\'lumotlar tahlil qilinmoqda...';
+    const D=parse(j.table.rows);
+    document.getElementById('loadScr').classList.remove('on');
+    document.getElementById('dashboard').style.display='block';
+    render(D);
+  }catch(e){
+    document.getElementById('lds').textContent='';const el=document.getElementById('lde');el.style.display='block';
+    el.innerHTML=`❌ <b>Xatolik:</b> ${e.message}<br><br>1. SHEET_ID to'g'rimi?<br>2. "Publish to web" qilinganmi?<br>3. Internet bormi?`;
+  }
+}
 
-        function useDefaultData() {
-            chartData = DEFAULT_DATA;
-            renderDashboard();
-        }
+// ═══════════════════════════════════════════════════════════
+// SMART PARSER — bo'limlarni KALIT SO'ZLAR orqali topadi
+// Bo'sh qatorlar tashlanib ketsa ham ishlaydi
+// ═══════════════════════════════════════════════════════════
+function gv(c){return c&&c.v!=null?c.v:null}
+function gn(c){const v=gv(c);return v!=null?Number(v):0}
+function gp(v){return v!=null&&Math.abs(v)<1&&v!==0?v*100:(v||0)}
+function gs(c){const v=gv(c);return v!=null?String(v):''}
 
-        function showLoading() {
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-box">
-                    <div class="stat-icon">⏳</div>
-                    <div class="stat-label">Ma'lumotlar yuklanmoqda...</div>
-                    <div class="stat-value">-</div>
-                </div>
-            `;
-        }
+function parse(rows){
+  // 1) Raw ma'lumotlarni 2D array ga o'tkazamiz
+  const data=[];
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i].c||[];
+    const row=[];
+    for(let j=0;j<Math.max(r.length,26);j++) row.push(j<r.length?r[j]:null);
+    data.push(row);
+  }
 
-        // ==================== DASHBOARDNI RENDER QILISH ====================
-        function renderDashboard() {
-            if (!chartData) return;
-            
-            renderStats();
-            renderCharts();
-            renderTables();
-            renderRecommendations();
-        }
+  // 2) Bo'limlarni marker kalit so'zlar orqali topamiz
+  function findRow(keywords){
+    for(let i=0;i<data.length;i++){
+      const c1=gs(data[i][1]).toLowerCase();
+      const c0=gs(data[i][0]).toLowerCase();
+      const combined=c0+' '+c1;
+      if(keywords.every(k=>combined.includes(k.toLowerCase()))) return i;
+    }
+    return -1;
+  }
 
-        function renderStats() {
-            const avgProgress = (chartData.districts.reduce((sum, d) => sum + d.value, 0) / chartData.districts.length).toFixed(1);
-            const problemBanks = chartData.banks.filter(b => b.status === 'Muammoli').length;
-            const problemSectors = chartData.sectors.filter(s => s.status === 'Muammoli').length;
-            const goodDistricts = chartData.districts.filter(d => d.status === 'Yaxshi').length;
-            
-            const statsGrid = document.getElementById('statsGrid');
-            statsGrid.innerHTML = `
-                <div class="stat-box">
-                    <div class="stat-icon">🏙️</div>
-                    <div class="stat-label">Jami tuman/shaharlar</div>
-                    <div class="stat-value">${chartData.districts.length}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-label">O'rtacha dastur ijrosi</div>
-                    <div class="stat-value">${avgProgress}<span class="stat-unit">%</span></div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-label">Yaxshi natijali tumanlar</div>
-                    <div class="stat-value">${goodDistricts}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">🏦</div>
-                    <div class="stat-label">Muammoli banklar</div>
-                    <div class="stat-value">${problemBanks}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">🏭</div>
-                    <div class="stat-label">Muammoli tarmoqlar</div>
-                    <div class="stat-value">${problemSectors}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-icon">⚠️</div>
-                    <div class="stat-label">Muammoli yo'nalishlar</div>
-                    <div class="stat-value">${Object.keys(chartData.problems).length}</div>
-                </div>
-            `;
-        }
+  // Viloyat summary: "Самарқанд вилояти" yoki B ustunida viloyat nomi
+  let vilRow=-1;
+  for(let i=0;i<data.length;i++){
+    const v=gs(data[i][1]);
+    if(v.includes('вилояти')&&gn(data[i][2])>0){vilRow=i;break}
+  }
 
-        function renderCharts() {
-            // Tumanlar charti
-            const districtCtx = document.getElementById('districtChart').getContext('2d');
-            if (charts.district) charts.district.destroy();
-            charts.district = new Chart(districtCtx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.districts.map(d => d.name),
-                    datasets: [{
-                        label: 'Dastur ijrosi (%)',
-                        data: chartData.districts.map(d => d.value),
-                        backgroundColor: 'rgba(30, 60, 114, 0.7)',
-                        borderColor: 'rgba(30, 60, 114, 1)',
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { y: { beginAtZero: true, max: 100 } },
-                    plugins: { legend: { position: 'top' } }
-                }
-            });
-            
-            // Banklar charti
-            const bankCtx = document.getElementById('bankChart').getContext('2d');
-            if (charts.bank) charts.bank.destroy();
-            charts.bank = new Chart(bankCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: chartData.banks.map(b => b.name),
-                    datasets: [{
-                        data: chartData.banks.map(b => b.value),
-                        backgroundColor: ['#1e3c72', '#2a5298', '#3b6cb0', '#4c7fc9', '#5d92e2', '#6ea5fb', '#8fb8ff', '#b0cbff'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { position: 'right', labels: { font: { size: 10 } } } }
-                }
-            });
-            
-            // Tarmoqlar charti
-            const sectorCtx = document.getElementById('sectorChart').getContext('2d');
-            if (charts.sector) charts.sector.destroy();
-            charts.sector = new Chart(sectorCtx, {
-                type: 'bar',
-                data: {
-                    labels: chartData.sectors.map(s => s.name),
-                    datasets: [{
-                        label: 'Investitsiya o\'zlashtirish (%)',
-                        data: chartData.sectors.map(s => s.value),
-                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                        borderColor: 'rgba(16, 185, 129, 1)',
-                        borderWidth: 1,
-                        borderRadius: 8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { y: { beginAtZero: true, max: 100 } }
-                }
-            });
-            
-            // Muammolar charti
-            const problemsCtx = document.getElementById('problemsChart').getContext('2d');
-            if (charts.problems) charts.problems.destroy();
-            charts.problems = new Chart(problemsCtx, {
-                type: 'radar',
-                data: {
-                    labels: Object.keys(chartData.problems),
-                    datasets: [{
-                        label: 'Muammo darajasi (%)',
-                        data: Object.values(chartData.problems),
-                        backgroundColor: 'rgba(220, 38, 38, 0.2)',
-                        borderColor: 'rgba(220, 38, 38, 1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: 'rgba(220, 38, 38, 1)',
-                        pointBorderColor: '#fff',
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { r: { beginAtZero: true, max: 100, ticks: { stepSize: 20 } } }
-                }
-            });
-        }
+  // Tumanlar: "Туман" yoki "шаҳар" header dan keyin raqamli qatorlar
+  let tumanStart=-1;
+  for(let i=0;i<data.length;i++){
+    const v=gs(data[i][1]);
+    if(v.includes('Туман')&&v.includes('номи')){tumanStart=i+1;break}
+  }
 
-        function renderTables() {
-            // Tumanlar jadvali
-            const districtTableHtml = `
-                <table>
-                    <thead>
-                        <tr><th>Tuman/shahar nomi</th><th>Dastur ijrosi (%)</th><th>Holat</th></tr>
-                    </thead>
-                    <tbody>
-                        ${chartData.districts.map(d => `
-                            <tr>
-                                <td>${d.name}</td>
-                                <td>${d.value}%</td>
-                                <td><span class="status-badge status-${d.status === 'Yaxshi' ? 'yaxshi' : (d.status === 'Muammoli' ? 'muammoli' : 'orta')}">${d.status}</span></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            document.getElementById('districtTable').innerHTML = districtTableHtml;
-            
-            // Banklar jadvali
-            const bankTableHtml = `
-                <table>
-                    <thead>
-                        <tr><th>Bank nomi</th><th>Kreditlash ko'rsatkichi (%)</th><th>Holat</th></tr>
-                    </thead>
-                    <tbody>
-                        ${chartData.banks.map(b => `
-                            <tr>
-                                <td>${b.name}</td>
-                                <td>${b.value}%</td>
-                                <td><span class="status-badge status-${b.status === 'Yaxshi' ? 'yaxshi' : (b.status === 'Muammoli' ? 'muammoli' : 'orta')}">${b.status}</span></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            document.getElementById('bankTable').innerHTML = bankTableHtml;
-            
-            // Tarmoqlar jadvali
-            const sectorTableHtml = `
-                <table>
-                    <thead>
-                         hilab<th>Tarmoq nomi</th><th>Investitsiya o'zlashtirish (%)</th><th>Holat</th></tr>
-                    </thead>
-                    <tbody>
-                        ${chartData.sectors.map(s => `
-                            <tr>
-                                <td>${s.name}</td>
-                                <td>${s.value}%</td>
-                                <td><span class="status-badge status-${s.status === 'Yaxshi' ? 'yaxshi' : (s.status === 'Muammoli' ? 'muammoli' : 'orta')}">${s.status}</span></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            document.getElementById('sectorTable').innerHTML = sectorTableHtml;
-        }
+  // Banklar: "Банк номи" header
+  let bankStart=-1;
+  for(let i=0;i<data.length;i++){
+    const v=gs(data[i][1]);
+    if(v.includes('Банк')&&v.includes('номи')){bankStart=i+1;break}
+  }
 
-        function renderRecommendations() {
-            const avgProgress = (chartData.districts.reduce((sum, d) => sum + d.value, 0) / chartData.districts.length).toFixed(1);
-            const problemBanksList = chartData.banks.filter(b => b.status === 'Muammoli').map(b => b.name).join(', ');
-            const problemDistricts = chartData.districts.filter(d => d.status === 'Muammoli').map(d => d.name).join(', ');
-            const problemSectorsList = chartData.sectors.filter(s => s.status === 'Muammoli').map(s => s.name).join(', ');
-            
-            const recommendationsHtml = `
-                <p><strong>📊 Umumiy tahlil:</strong> Samarqand viloyati bo'yicha hududiy dasturlarning o'rtacha ijrosi <strong>${avgProgress}%</strong> ni tashkil etmoqda. ${avgProgress >= 80 ? 'Bu ko\'rsatkich nisbatan yuqori hisoblanadi, ammo ba\'zi tumanlarda pasayish kuzatilmoqda.' : 'Bu ko\'rsatkichni yaxshilash va muammoli tumanlarda maxsus chora-tadbirlar ko\'rish zarur.'}</p>
-                
-                <p><strong>🏦 Markaziy bank raisi topshirig'i asosida bank tizimi tahlili:</strong><br>
-                • Viloyatdagi ${chartData.banks.length} ta bank filiallaridan ${chartData.banks.filter(b => b.status === 'Muammoli').length} tasida muammolar mavjud.<br>
-                • Muammoli banklar: ${problemBanksList || "Yo'q"}<br>
-                • Asosiy muammolar: garov ta'minoti (${chartData.problems['Garov ta\'minoti muammolari']}%), kredit resurslari yetishmovchiligi (${chartData.problems['Kredit resurslari yetishmovchiligi']}%)</p>
-                
-                <p><strong>⚠️ Mavjud muammoli yo'nalishlar:</strong><br>
-                • ${Object.entries(chartData.problems).map(([k, v]) => `${k} - ${v}%`).join('<br>• ')}</p>
-                
-                <p><strong>💡 Tavsiyalar:</strong><br>
-                1. <strong>Bank tizimi muammolarini bartaraf etish:</strong> Markaziy bank raisining topshirig'iga asosan, banklarning hududiy filiallarida kredit resurslarini ko'paytirish va garov ta'minoti masalalarini soddalashtirish choralarini ko'rish.<br>
-                2. <strong>Muammoli tumanlarda ishlarni kuchaytirish:</strong> ${problemDistricts || "Barcha tumanlar"} da dastur ijrosini kuchaytirish uchun maxsus ishchi guruhlar tashkil etish va ular faoliyatini muntazam monitoring qilish.<br>
-                3. <strong>Bank xizmatlaridan foydalanish darajasini oshirish:</strong> Raqamli bank xizmatlarini rivojlantirish, aholi va tadbirkorlarni moliyaviy savodxonligini oshirish.<br>
-                4. <strong>Muammoli tarmoqlarni qo'llab-quvvatlash:</strong> ${problemSectorsList || "Barcha tarmoqlar"} da investitsiya loyihalarini jadallashtirish va moliyalashtirish mexanizmlarini takomillashtirish.<br>
-                5. <strong>Monitoring va nazorat tizimini takomillashtirish:</strong> Kredit qaytarish muddatlari buzilishining oldini olish uchun avtomatlashtirilgan monitoring tizimini joriy etish.</p>
-                
-                <p><strong>📈 Prognoz va yakuniy xulosa:</strong><br>
-                Tavsiyalar to'liq amalga oshirilganda, 2026 yil yakuniga qadar:<br>
-                • Dastur ijrosini 85-90% gacha oshirish<br>
-                • Bank tizimidagi muammolarni 40-50% ga kamaytirish<br>
-                • Muammoli tumanlar sonini 3 tadan 1 tagacha qisqartirish<br>
-                • Kredit resurslari hajmini 25-30% ga oshirish mumkin.</p>
-            `;
-            document.getElementById('recommendationsContent').innerHTML = recommendationsHtml;
-        }
+  // Tarmoqlar: "Тармоқ номи" header
+  let tarmoqStart=-1;
+  for(let i=0;i<data.length;i++){
+    const v=gs(data[i][1]);
+    if(v.includes('Тармоқ')&&v.includes('номи')){tarmoqStart=i+1;break}
+  }
 
-        // ==================== PDF GENERATSIYA ====================
-        async function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('p', 'mm', 'a4');
-            
-            doc.setFontSize(20);
-            doc.setTextColor(30, 60, 114);
-            doc.text("Samarqand Viloyati", 20, 20);
-            doc.setFontSize(16);
-            doc.text("Hududiy Dasturlar va Bank Tizimi Tahlili", 20, 30);
-            
-            doc.setFontSize(10);
-            doc.setTextColor(100, 100, 100);
-            doc.text(`Sana: ${new Date().toLocaleDateString('uz-UZ')}`, 20, 40);
-            
-            let yPos = 55;
-            
-            // Umumiy ko'rsatkichlar
-            doc.setFontSize(12);
-            doc.setTextColor(0, 0, 0);
-            doc.text("1. Umumiy ko'rsatkichlar:", 20, yPos);
-            yPos += 8;
-            
-            const avgProgress = (chartData.districts.reduce((sum, d) => sum + d.value, 0) / chartData.districts.length).toFixed(1);
-            doc.setFontSize(9);
-            doc.text(`• Tumanlar soni: ${chartData.districts.length} ta`, 25, yPos);
-            yPos += 6;
-            doc.text(`• O'rtacha dastur ijrosi: ${avgProgress}%`, 25, yPos);
-            yPos += 6;
-            doc.text(`• Muammoli banklar: ${chartData.banks.filter(b => b.status === 'Muammoli').length} ta`, 25, yPos);
-            yPos += 6;
-            doc.text(`• Muammoli tarmoqlar: ${chartData.sectors.filter(s => s.status === 'Muammoli').length} ta`, 25, yPos);
-            yPos += 12;
-            
-            // Tumanlar jadvali
-            doc.setFontSize(12);
-            doc.text("2. Tumanlar kesimida tahlil:", 20, yPos);
-            yPos += 5;
-            
-            const districtRows = chartData.districts.map(d => [d.name, `${d.value}%`, d.status]);
-            doc.autoTable({
-                startY: yPos,
-                head: [['Tuman/shahar', 'Dastur ijrosi', 'Holat']],
-                body: districtRows,
-                theme: 'striped',
-                headStyles: { fillColor: [30, 60, 114] }
-            });
-            yPos = doc.lastAutoTable.finalY + 10;
-            
-            // Banklar jadvali
-            doc.text("3. Banklar kesimida tahlil:", 20, yPos);
-            yPos += 5;
-            const bankRows = chartData.banks.map(b => [b.name, `${b.value}%`, b.status]);
-            doc.autoTable({
-                startY: yPos,
-                head: [['Bank nomi', 'Kreditlash ko\'rsatkichi', 'Holat']],
-                body: bankRows,
-                theme: 'striped',
-                headStyles: { fillColor: [30, 60, 114] }
-            });
-            yPos = doc.lastAutoTable.finalY + 10;
-            
-            // Tarmoqlar jadvali
-            doc.text("4. Tarmoqlar kesimida tahlil:", 20, yPos);
-            yPos += 5;
-            const sectorRows = chartData.sectors.map(s => [s.name, `${s.value}%`, s.status]);
-            doc.autoTable({
-                startY: yPos,
-                head: [['Tarmoq nomi', 'Investitsiya o\'zlashtirish', 'Holat']],
-                body: sectorRows,
-                theme: 'striped',
-                headStyles: { fillColor: [30, 60, 114] }
-            });
-            yPos = doc.lastAutoTable.finalY + 10;
-            
-            // Muammoli yo'nalishlar
-            doc.text("5. Muammoli yo'nalishlar va bartaraf etish holati:", 20, yPos);
-            yPos += 5;
-            const problemRows = Object.entries(chartData.problems).map(([k, v]) => [k, `${v}%`]);
-            doc.autoTable({
-                startY: yPos,
-                head: [['Muammoli yo\'nalish', 'Muammo darajasi']],
-                body: problemRows,
-                theme: 'striped',
-                headStyles: { fillColor: [30, 60, 114] }
-            });
-            yPos = doc.lastAutoTable.finalY + 10;
-            
-            // Tavsiyalar
-            doc.text("6. Tavsiyalar va xulosalar:", 20, yPos);
-            yPos += 8;
-            doc.setFontSize(8);
-            const recommendations = [
-                "1. Markaziy bank raisining topshirig'iga asosan, banklarning hududiy filiallarida kredit resurslarini ko'paytirish va garov ta'minoti masalalarini soddalashtirish.",
-                "2. Muammoli tumanlarda dastur ijrosini kuchaytirish uchun maxsus ishchi guruhlar tashkil etish.",
-                "3. Raqamli bank xizmatlarini rivojlantirish va aholining moliyaviy savodxonligini oshirish.",
-                "4. Muammoli tarmoqlarda investitsiya loyihalarini jadallashtirish.",
-                "5. Kredit qaytarish muddatlari buzilishining oldini olish uchun monitoring tizimini takomillashtirish."
-            ];
-            
-            recommendations.forEach(rec => {
-                const lines = doc.splitTextToSize(rec, 170);
-                doc.text(lines, 20, yPos);
-                yPos += lines.length * 5;
-            });
-            
-            doc.save("Samarqand_viloyati_hisoboti.pdf");
-        }
-        
-        // Expose functions to global scope
-        window.verifyPassword = verifyPassword;
-        window.handleEnter = handleEnter;
-        window.generatePDF = generatePDF;
-    </script>
+  // Muammolar: "Мавжуд муаммолар" header
+  let muamStart=-1;
+  for(let i=0;i<data.length;i++){
+    const v=gs(data[i][1]);
+    if(v.includes('Мавжуд')&&v.includes('муаммолар')){muamStart=i+1;break}
+  }
+
+  console.log('Topilgan bo\'limlar:',{vilRow,tumanStart,bankStart,tarmoqStart,muamStart});
+
+  // 3) Viloyat umumiy
+  const V={total:0,totalSum:0,fin:0,finSum:0,bank:0,bankSum:0,stopped:0,stoppedSum:0,
+    prospect:0,prospectSum:0,plan26:0,plan26Sum:0,crSoni:0,crSum:0,
+    npl:0,nplSum:0,nplPct:0,launched:0,launchedSum:0,notL:0,notLSum:0};
+  if(vilRow>=0){
+    const r=data[vilRow];
+    V.total=gn(r[2]);V.totalSum=gn(r[3]);V.fin=gn(r[4]);V.finSum=gn(r[5]);
+    V.bank=gn(r[6]);V.bankSum=gn(r[7]);V.stopped=gn(r[8]);V.stoppedSum=gn(r[9]);
+    V.prospect=gn(r[10]);V.prospectSum=gn(r[11]);V.plan26=gn(r[12]);V.plan26Sum=gn(r[13]);
+    V.crSoni=gn(r[14]);V.crSum=gn(r[15]);V.npl=gn(r[16]);V.nplSum=gn(r[17]);
+    V.nplPct=gp(gn(r[18]));V.launched=gn(r[19]);V.launchedSum=gn(r[20]);
+    V.notL=gn(r[21]);V.notLSum=gn(r[22]);
+  }
+
+  // 4) Helper: ketma-ket raqamli qatorlarni yig'ish (tartib raqami bor = data row)
+  function collectRows(start,maxGap){
+    if(start<0)return[];
+    const result=[];let gap=0;
+    for(let i=start;i<data.length;i++){
+      const num=gn(data[i][0]);
+      const name=gs(data[i][1]);
+      if(num>0&&name){result.push(data[i]);gap=0}
+      else{gap++;if(gap>maxGap)break}
+    }
+    return result;
+  }
+
+  // 5) Tumanlar (25 ta ustun — tuman/bank bir xil struktura)
+  const T=collectRows(tumanStart,2).map(r=>({
+    nm:gs(r[1]),tot:gn(r[2]),cr:gn(r[3]),fin:gn(r[4]),fS:gn(r[5]),bk:gn(r[6]),bS:gn(r[7]),
+    st:gn(r[8]),cqS:gn(r[14]),cqSm:gn(r[15]),npl:gn(r[16]),nplS:gn(r[17]),nplP:gp(gn(r[18])),
+    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])}));
+
+  // 6) Banklar
+  const B=collectRows(bankStart,2).map(r=>({
+    nm:gs(r[1]),tot:gn(r[2]),cr:gn(r[3]),fin:gn(r[4]),fS:gn(r[5]),bk:gn(r[6]),bS:gn(r[7]),
+    st:gn(r[8]),cqS:gn(r[14]),cqSm:gn(r[15]),npl:gn(r[16]),nplS:gn(r[17]),nplP:gp(gn(r[18])),
+    la:gn(r[19]),laS:gn(r[20]),nl:gn(r[21]),nlS:gn(r[22])}));
+
+  // 7) Tarmoqlar (faqat 9 ta ustun: 0-8)
+  const S=collectRows(tarmoqStart,2).map(r=>({
+    nm:gs(r[1]),pr:gn(r[2]),cr:gn(r[3]),qS:gn(r[4]),qSm:gn(r[5]),
+    npl:gn(r[6]),nplS:gn(r[7]),nplP:gp(gn(r[8]))}));
+
+  // 8) Muammolar (16 ta ustun: 0-15)
+  const M=collectRows(muamStart,2).map(r=>({
+    lb:gs(r[1]),sot:gn(r[2]),sotK:gn(r[3]),tsh:gn(r[4]),tshK:gn(r[5]),
+    pul:gn(r[6]),pulK:gn(r[7]),deb:gn(r[8]),debS:gn(r[9]),
+    krd:gn(r[10]),krdS:gn(r[11]),npl:gn(r[12]),oil:gn(r[13]),ryx:gn(r[14]),fao:gn(r[15])}));
+
+  console.log('Parsed:',{V_total:V.total,T_len:T.length,B_len:B.length,S_len:S.length,M_len:M.length});
+  return{V,T,B,S,M};
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════
+Chart.defaults.color='#64748b';Chart.defaults.borderColor='rgba(226,232,240,.5)';
+Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=11;
+const F=(n,d)=>d!=null?Number(n||0).toFixed(d):Number(n||0).toLocaleString('uz');
+
+function render(D){
+  const V=D.V;
+  const fp=V.total?((V.fin/V.total)*100).toFixed(1):0;
+  const lp=V.fin?((V.launched/V.fin)*100).toFixed(1):0;
+
+  // KPI
+  document.getElementById('kpiS').innerHTML=
+    kpi('📋','rgba(37,99,235,.1)','var(--ac)',V.total,'Жами лойиҳалар',`Кредит: ${F(V.totalSum,1)} млрд`)+
+    kpi('✅','rgba(5,150,105,.1)','var(--gn)',V.fin,'Молиялаштирилган',`${F(V.finSum,1)} млрд · <span style="color:var(--gn)">${fp}%</span>`)+
+    kpi('🏦','rgba(8,145,178,.1)','var(--cy)',V.bank,'Банк кредити',`${F(V.bankSum,1)} млрд`)+
+    kpi('🚀','rgba(217,119,6,.1)','var(--am)',V.launched,'Ишга туширилган',`${F(V.launchedSum,1)} млрд · <span style="color:var(--gn)">${lp}%</span>`)+
+    kpi('⚠️','rgba(220,38,38,.1)','var(--rd)',V.npl,'NPL',`${F(V.nplSum,1)} млрд · <span style="color:var(--rd)">${F(V.nplPct,1)}%</span>`)+
+    kpi('📈','rgba(79,70,229,.1)','var(--ac2)',V.plan26,'2026 й. режа',`${F(V.plan26Sum,1)} млрд`);
+  document.getElementById('kpiX').innerHTML=
+    mn('Тўхтатилган',V.stopped,V.stoppedSum,'var(--am)')+mn('Истиқболли',V.prospect,V.prospectSum,'var(--cy)')+mn('Ишга тушмаган',V.notL,V.notLSum,'var(--rd)');
+
+  // Tumanlar
+  const ts=[...D.T].sort((a,b)=>b.tot-a.tot);
+  bH('cTP',ts.map(t=>t.nm),ts.map(t=>t.tot),'rgba(37,99,235,.7)');
+  const tc=[...D.T].sort((a,b)=>b.cr-a.cr).slice(0,10);
+  bH('cTC',tc.map(t=>t.nm),tc.map(t=>t.cr),'rgba(8,145,178,.7)');
+  tF('tT',D.T);
+
+  // Banklar
+  const bs=[...D.B].sort((a,b)=>b.tot-a.tot);
+  const bC=['#2563eb','#4f46e5','#7c3aed','#a855f7','#d946ef','#db2777','#e11d48','#dc2626','#ea580c','#d97706','#0891b2'];
+  new Chart(document.getElementById('cBP'),{type:'doughnut',
+    data:{labels:bs.map(b=>b.nm),datasets:[{data:bs.map(b=>b.tot),backgroundColor:bC,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{padding:8,font:{size:10},boxWidth:12}}}}});
+  const bn=[...D.B].filter(b=>b.nplS>0).sort((a,b)=>b.nplS-a.nplS);
+  bH('cBN',bn.map(b=>b.nm),bn.map(b=>b.nplS),bn.map(b=>b.nplP>=4?'rgba(220,38,38,.7)':b.nplP>=2?'rgba(217,119,6,.7)':'rgba(5,150,105,.7)'));
+  tF('tB',D.B);
+
+  // Tarmoqlar
+  const sc=[...D.S].sort((a,b)=>b.cr-a.cr);
+  bH('cSC',sc.slice(0,10).map(s=>s.nm),sc.slice(0,10).map(s=>s.cr),'rgba(5,150,105,.7)');
+  const sn=[...D.S].filter(s=>s.nplS>0).sort((a,b)=>b.nplP-a.nplP).slice(0,12);
+  new Chart(document.getElementById('cSN'),{type:'bar',
+    data:{labels:sn.map(s=>s.nm),datasets:[
+      {label:'NPL(млрд)',data:sn.map(s=>s.nplS),backgroundColor:'rgba(220,38,38,.5)',borderRadius:4,barThickness:14},
+      {label:'NPL%',data:sn.map(s=>s.nplP),type:'line',borderColor:'#d97706',pointBackgroundColor:'#d97706',pointRadius:4,borderWidth:2,yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(226,232,240,.4)'}},y1:{position:'right',grid:{display:false}}}}});
+  tSec('tS',sc);
+
+  // Timeline
+  tlR(D.M);trC(D.M);pR(V,D.M);
+}
+
+function kpi(i,bg,c,v,l,s){return `<div class="kc"><div class="ki" style="background:${bg};color:${c}">${i}</div><div class="kv">${F(v)}</div><div class="kl">${l}</div><div class="kss">${s}</div></div>`}
+function mn(l,v,s,c){return `<div class="cd" style="text-align:center"><div style="font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px">${l}</div><div style="font-size:30px;font-weight:800;color:${c};margin:6px 0">${F(v)}</div><div style="font-size:12px;color:var(--tx2)">${F(s,1)} млрд сўм</div></div>`}
+function bH(id,lb,dt,bg){new Chart(document.getElementById(id),{type:'bar',data:{labels:lb,datasets:[{data:dt,backgroundColor:bg,borderRadius:4,barThickness:18}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(226,232,240,.4)'}},y:{grid:{display:false}}}}})}
+
+function tF(id,items){
+  const tb=document.querySelector(`#${id} tbody`);
+  [...items].sort((a,b)=>b.tot-a.tot).forEach(x=>{
+    const c=x.nplP>=4?'bad':x.nplP>=2?'hl':'gd';
+    tb.innerHTML+=`<tr><td><b>${x.nm}</b></td><td class="n">${F(x.tot)}</td><td class="n">${F(x.cr,1)}</td><td class="n">${F(x.fin)}</td><td class="n gd">${F(x.la)}</td><td class="n ${x.nl>5?'bad':''}">${x.nl}</td><td class="n">${x.npl}</td><td class="n">${F(x.nplS,1)}</td><td class="n ${c}">${F(x.nplP,1)}%</td></tr>`;
+  });
+}
+function tSec(id,items){
+  const tb=document.querySelector(`#${id} tbody`);
+  items.forEach(s=>{
+    const c=s.nplP>=7?'bad':s.nplP>=3?'hl':'gd';
+    tb.innerHTML+=`<tr><td><b>${s.nm}</b></td><td class="n">${F(s.pr)}</td><td class="n">${F(s.cr,1)}</td><td class="n">${s.qS}</td><td class="n">${F(s.qSm,1)}</td><td class="n">${s.npl}</td><td class="n">${F(s.nplS,1)}</td><td class="n ${c}">${F(s.nplP,1)}%</td></tr>`;
+  });
+}
+function tlR(M){
+  let h='';M.forEach(m=>{
+    h+=`<div class="ti"><div class="td">${m.lb}</div><div class="tc"><div class="tg">
+      <div class="tm"><div class="v" style="color:${m.sot?'var(--am)':'var(--tx2)'}">${m.sot||'—'}</div><div class="l">Сотилмаган</div></div>
+      <div class="tm"><div class="v" style="color:${m.pul?'var(--am)':'var(--tx2)'}">${m.pul||'—'}</div><div class="l">Пул тушуми йўқ</div></div>
+      <div class="tm"><div class="v" style="color:${m.deb?'var(--rd)':'var(--tx2)'}">${m.deb?F(m.deb):'—'}</div><div class="l">Дебитор</div></div>
+      <div class="tm"><div class="v" style="color:${m.krd?'var(--rd)':'var(--tx2)'}">${m.krd?F(m.krd):'—'}</div><div class="l">Кредитор</div></div>
+      <div class="tm"><div class="v" style="color:${m.npl?'var(--am)':'var(--tx2)'}">${m.npl||'—'}</div><div class="l">NPL (млрд)</div></div>
+      <div class="tm"><div class="v" style="color:${m.oil?'var(--am)':'var(--tx2)'}">${m.oil||'—'}</div><div class="l">Оилавий (млрд)</div></div>
+    </div></div></div>`;
+  });document.getElementById('tlBox').innerHTML=h;
+}
+function trC(M){
+  const nv=M.filter(m=>m.npl>0);
+  if(nv.length>1) new Chart(document.getElementById('cNT'),{type:'line',data:{labels:nv.map(n=>n.lb.substring(0,10)),datasets:[{data:nv.map(n=>n.npl),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.08)',fill:true,tension:.3,pointRadius:6,pointBackgroundColor:'#dc2626',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(226,232,240,.4)'}},x:{grid:{display:false}}}}});
+  const dv=M.filter(m=>m.deb>0);
+  if(dv.length>1) new Chart(document.getElementById('cDT'),{type:'line',data:{labels:dv.map(d=>d.lb.substring(0,10)),datasets:[{data:dv.map(d=>d.deb),borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.08)',fill:true,tension:.3,pointRadius:6,pointBackgroundColor:'#d97706',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(226,232,240,.4)'}},x:{grid:{display:false}}}}});
+}
+function pR(V,M){
+  const L=M.length?M[M.length-1]:{};
+  const fp=V.total?((V.fin/V.total)*100).toFixed(1):0;
+  const lp=V.fin?((V.launched/V.fin)*100).toFixed(1):0;
+  document.getElementById('prC').innerHTML=`<div class="ctt" style="color:var(--rd)">🔴 Асосий муаммолар</div><div style="font-size:13px;line-height:1.8">
+    <p><b>1.</b> Дебитор: ${L.deb?F(L.deb):''} корхона, ${F(L.debS||0)} млн $</p>
+    <p style="margin-top:6px"><b>2.</b> Кредитор: ${L.krd?F(L.krd):''} корхона, ${F(L.krdS||0,1)} млн $</p>
+    <p style="margin-top:6px"><b>3.</b> NPL: ${F(V.npl)} та, ${F(V.nplSum,1)} млрд (${F(V.nplPct,1)}%)</p>
+    <p style="margin-top:6px"><b>4.</b> Сотилмаган: ${L.sot||0} хонадон, ${F(L.sotK||0,1)} млрд</p>
+    <p style="margin-top:6px"><b>5.</b> Пул тушуми йўқ: ${L.pul||0} та (${F(L.pulK||0,1)} млрд)</p>
+    <p style="margin-top:6px"><b>6.</b> Оилавий: ${F(L.oil||0,1)} млрд сўм</p>
+    <p style="margin-top:6px"><b>7.</b> Ишга тушмаган: ${F(V.notL)} та (${F(V.notLSum,1)} млрд)</p></div>`;
+  document.getElementById('poC').innerHTML=`<div class="ctt" style="color:var(--gn)">✅ Ижобий натижалар</div><div style="font-size:13px;line-height:1.8">
+    <p><b>1.</b> Молиялаштириш: ${F(V.fin)}/${F(V.total)} (${fp}%)</p>
+    <p style="margin-top:6px"><b>2.</b> Ишга тушириш: ${F(V.launched)} та (${lp}%)</p>
+    <p style="margin-top:6px"><b>3.</b> 2026 режа: ${F(V.plan26)} лойиҳа, ${F(V.plan26Sum,1)} млрд</p>
+    <p style="margin-top:6px"><b>4.</b> Истиқболли: ${F(V.prospect)} та, ${F(V.prospectSum,1)} млрд</p></div>`;
+  document.getElementById('rcB').innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:12px;color:var(--cy)">💡 Тавсиялар</div>
+    <div class="rc"><span class="rn">1</span><b>Ташқи савдо:</b> Кредитор қарздор корхоналар учун штаб тузиш ва ойлик мониторинг.</div>
+    <div class="rc"><span class="rn">2</span><b>NPL:</b> Юқори NPL ли тармоқларда реструктуризация дастурлари.</div>
+    <div class="rc"><span class="rn">3</span><b>Ишга тушмаган ${F(V.notL)} лойиҳа:</b> Йўл харитаси тузиш, 2026 II чоракгача ишга тушириш.</div>
+    <div class="rc"><span class="rn">4</span><b>Сотилмаган хонадонлар:</b> Нарх оптималлаш, ипотека имтиёзлари.</div>
+    <div class="rc"><span class="rn">5</span><b>Оилавий тадбиркорлик:</b> ${F(L.oil||0,1)} млрд қарзни камайтириш учун индивидуал режа.</div>
+    <div class="rc"><span class="rn">6</span><b>Кам лойиҳали туманларда</b> янги лойиҳалар жалб қилишни кучайтириш.</div>`;
+}
+async function dlPDF(){
+  const o=document.getElementById('pov');o.classList.add('on');
+  try{const{jsPDF}=window.jspdf,pdf=new jsPDF('p','mm','a4'),el=document.getElementById('mc'),
+    c=await html2canvas(el,{scale:1.5,useCORS:true,backgroundColor:'#f0f4f8',logging:false,windowWidth:1440}),
+    img=c.toDataURL('image/jpeg',.92),pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight(),
+    iW=pW-16,iH=(c.height*iW)/c.width;let left=iH,pos=8;
+    pdf.addImage(img,'JPEG',8,pos,iW,iH);left-=(pH-16);
+    while(left>0){pos-=pH-8;pdf.addPage();pdf.addImage(img,'JPEG',8,pos,iW,iH);left-=(pH-16);}
+    pdf.save('Samarqand_Hisobot.pdf');
+  }catch(e){alert('PDF xatolik: '+e.message)}o.classList.remove('on');
+}
+</script>
 </body>
 </html>
