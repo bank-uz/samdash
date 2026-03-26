@@ -1,214 +1,410 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
 <meta charset="UTF-8">
-<title>AI Bank Risk Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Самарқанд вилояти — Ҳудудий дастурлар ижроси</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-body { font-family: Arial; background:#020617; color:white; margin:0; }
-.container { width:95%; margin:auto; padding:20px; }
-
-.card {
-  background:#0f172a;
-  padding:15px;
-  margin:10px;
-  border-radius:10px;
-  display:inline-block;
-  min-width:180px;
-}
-
-input, button {
-  padding:10px;
-  border-radius:8px;
-  border:none;
-}
-
-button {
-  background:#2563eb;
-  color:white;
-  cursor:pointer;
-}
-
-table {
-  width:100%;
-  margin-top:20px;
-  border-collapse:collapse;
-}
-
-td, th {
-  padding:10px;
-  border-bottom:1px solid #334155;
-}
-
-.red { color:#ef4444; }
-.yellow { color:#facc15; }
-.green { color:#22c55e; }
-
-.hidden { display:none; }
-.center { text-align:center; margin-top:100px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+#lockScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(160deg,#0f2027,#203a43 40%,#2c5364);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif}
+.lock-box{background:rgba(255,255,255,.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:48px 44px;text-align:center;width:420px;box-shadow:0 30px 80px rgba(0,0,0,.4)}
+.lock-box .lk-ic{width:72px;height:72px;border-radius:50%;margin:0 auto 24px;background:linear-gradient(135deg,#0ea5e9,#6366f1);display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 32px rgba(99,102,241,.4)}
+.lock-box h2{color:#fff;font-size:20px;font-weight:700;margin-bottom:6px}
+.lock-box p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:28px}
+.lk-in{width:100%;padding:14px 18px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.08);color:#fff;font-size:15px;font-family:'Inter',sans-serif;outline:none;transition:.3s}
+.lk-in:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 20px rgba(99,102,241,.15)}
+.lk-in::placeholder{color:rgba(255,255,255,.3)}
+.lk-bt{width:100%;margin-top:16px;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#0ea5e9,#6366f1);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:.2s}
+.lk-bt:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(99,102,241,.4)}
+.lk-er{color:#f87171;font-size:12px;margin-top:12px;display:none}
+#loadScr{display:none;position:fixed;inset:0;z-index:9998;background:#f0f4f8;align-items:center;justify-content:center;flex-direction:column;font-family:'Inter',sans-serif}
+#loadScr.on{display:flex}
+.ld-r{width:56px;height:56px;border:4px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:sp .8s linear infinite;margin-bottom:20px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ld-t{font-size:15px;font-weight:600;color:#0f172a}
+.ld-s{font-size:12px;color:#64748b;margin-top:6px}
+.ld-e{color:#dc2626;font-size:13px;margin-top:16px;display:none;max-width:500px;text-align:center;line-height:1.7}
+#dashboard{display:none}
+:root{--bg:#f0f4f8;--card:#fff;--card2:#f8fafc;--accent:#2563eb;--accent2:#4f46e5;--green:#059669;--red:#dc2626;--amber:#d97706;--cyan:#0891b2;--pink:#db2777;--text:#0f172a;--text2:#64748b;--border:#e2e8f0;--border2:#cbd5e1;--shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);--shadow-lg:0 10px 40px rgba(0,0,0,.08)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+.hero{background:linear-gradient(135deg,#1e3a5f,#1e40af 40%,#3b82f6);padding:40px 40px 34px;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(30,64,175,.2)}
+.hero::before{content:'';position:absolute;top:-40%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);pointer-events:none}
+.hero-in{max-width:1440px;margin:0 auto;position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.hero h1{font-size:26px;font-weight:800;color:#fff;letter-spacing:-.5px}
+.hero-sub{color:rgba(255,255,255,.75);font-size:13px;margin-top:4px}
+.hero-dt{display:inline-block;margin-top:10px;padding:5px 14px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;font-size:12px;color:#fff}
+.btn-dl{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#fff;color:#1e40af;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:.2s}
+.btn-dl:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.btn-dl svg{width:18px;height:18px}
+.ctn{max-width:1440px;margin:0 auto;padding:28px 40px 50px}
+.gs-bar{background:linear-gradient(135deg,rgba(5,150,105,.06),rgba(8,145,178,.06));border:1px solid rgba(5,150,105,.2);border-radius:12px;padding:12px 20px;margin-bottom:24px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text2)}
+.gs-dot{width:8px;height:8px;border-radius:50%;background:#059669;box-shadow:0 0 8px rgba(5,150,105,.5);animation:pu 2s infinite;flex-shrink:0}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+.kpi-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:28px}
+.kc{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 16px;box-shadow:var(--shadow);transition:.2s}
+.kc:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.ki{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:10px}
+.kv{font-size:25px;font-weight:800;letter-spacing:-1px}
+.kl{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.4}
+.ks{font-size:10px;color:var(--text2);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.sec{margin-bottom:34px}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sn{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.st{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.cd{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;overflow:hidden;box-shadow:var(--shadow)}
+.ct{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+.dt{width:100%;border-collapse:collapse;font-size:12px}
+.dt thead th{text-align:left;padding:9px 10px;color:var(--text2);font-weight:600;border-bottom:2px solid var(--border);font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;background:var(--card2)}
+.dt tbody td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.dt tbody tr:hover{background:rgba(37,99,235,.03)}
+.dt .n{text-align:right;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+.dt .hl{color:var(--amber);font-weight:600}.dt .bad{color:var(--red);font-weight:600}.dt .gd{color:var(--green);font-weight:600}
+.cb{position:relative;height:310px}.cbs{position:relative;height:250px}
+.tl{position:relative;padding-left:28px}
+.tl::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--accent),var(--accent2),var(--green))}
+.ti{position:relative;margin-bottom:22px}
+.ti::before{content:'';position:absolute;left:-22px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:3px solid var(--bg)}
+.ti:last-child::before{background:var(--green)}
+.td{font-size:13px;font-weight:700;color:var(--accent);margin-bottom:5px}
+.tc{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.tm{text-align:center}.tm .v{font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace}.tm .l{font-size:9.5px;color:var(--text2);margin-top:1px}
+.rc{background:linear-gradient(135deg,rgba(5,150,105,.05),rgba(8,145,178,.05));border:1px solid rgba(5,150,105,.15);border-radius:12px;padding:14px 18px;margin-bottom:9px;font-size:13px;line-height:1.6}
+.rc .rn{display:inline-flex;width:22px;height:22px;border-radius:6px;background:rgba(5,150,105,.12);color:var(--green);align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-right:8px}
+.footer{text-align:center;padding:24px 40px;color:var(--text2);font-size:11px;border-top:1px solid var(--border);background:var(--card)}
+.pov{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center}
+.pov.on{display:flex}
+.psp{background:#fff;border-radius:16px;padding:28px 36px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.psp .ps{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 14px}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+@media(max-width:1200px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.g2,.g3{grid-template-columns:1fr}}
+@media(max-width:768px){.kpi-strip{grid-template-columns:repeat(2,1fr)}.hero{padding:24px 16px}.hero h1{font-size:18px}.ctn{padding:16px}.tg{grid-template-columns:1fr 1fr}.hero-in{flex-direction:column;align-items:flex-start}}
 </style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="login" class="center">
-  <h2>🔐 Login</h2>
-  <input id="user" placeholder="Login"><br><br>
-  <input id="pass" type="password" placeholder="Parol"><br><br>
-  <button id="loginBtn">Kirish</button>
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lk-ic">🔐</div>
+    <h2>Дашборд кириш</h2>
+    <p>Самарқанд вилояти — Ҳудудий дастурлар мониторинги</p>
+    <input type="password" class="lk-in" id="pi" placeholder="Паролни киритинг..." autocomplete="off">
+    <button class="lk-bt" onclick="chkP()">Кириш →</button>
+    <div class="lk-er" id="pe">❌ Парол нотўғри</div>
+  </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="app" class="hidden container">
+<div id="loadScr">
+  <div class="ld-r"></div>
+  <div class="ld-t">Google Sheets дан маълумот юкланмоқда...</div>
+  <div class="ld-s" id="lds">Илтимос, кутинг</div>
+  <div class="ld-e" id="lde"></div>
+</div>
 
-<h1>🤖 AI Bank Risk Dashboard</h1>
+<div class="pov" id="pov"><div class="psp"><div class="ps"></div><div style="font-size:14px;font-weight:600;color:#0f172a">PDF тайёрланмоқда...</div></div></div>
 
-<div id="kpi"></div>
+<div id="dashboard">
+<div class="hero"><div class="hero-in">
+  <div>
+    <h1>Самарқанд вилояти — Ҳудудий дастурлар ижроси</h1>
+    <div class="hero-sub">2018–2026 йилларда амалга оширилган лойиҳалар мониторинги ва банк тизими таҳлили</div>
+    <div class="hero-dt">📅 2026 йил 1 март ҳолатига</div>
+  </div>
+  <div><button class="btn-dl" onclick="dlPDF()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF юклаш</button></div>
+</div></div>
 
-<canvas id="chart"></canvas>
+<div class="ctn" id="mc">
+<div class="gs-bar"><div class="gs-dot"></div><span>Google Sheets дан реал вақтда маълумот олинмоқда</span></div>
 
-<h2>⚠️ AI Future Risk (TOP 10)</h2>
-<table id="table"></table>
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--accent),var(--accent2))">1</div><div class="st">Вилоятнинг умумий кўрсаткичлари</div></div>
+<div class="kpi-strip" id="kpiS"></div><div class="g3" id="kpiX" style="margin-bottom:10px"></div></div>
 
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--cyan),var(--accent))">2</div><div class="st">Туман (шаҳар)лар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ct">Лойиҳалар сони</div><div class="cb"><canvas id="cTP"></canvas></div></div>
+<div class="cd"><div class="ct">Кредит суммаси (млрд сўм)</div><div class="cb"><canvas id="cTC"></canvas></div></div></div>
+<div class="cd"><div class="ct">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tT"><thead><tr><th>Туман/шаҳар</th><th class="n">Жами</th><th class="n">Кредит</th><th class="n">Молиял.</th><th class="n">Тушган</th><th class="n">Тушмаган</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
+
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--accent2),var(--pink))">3</div><div class="st">Банклар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ct">Лойиҳалар тақсимоти</div><div class="cb"><canvas id="cBP"></canvas></div></div>
+<div class="cd"><div class="ct">NPL таҳлили (млрд сўм)</div><div class="cb"><canvas id="cBN"></canvas></div></div></div>
+<div class="cd"><div class="ct">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tB"><thead><tr><th>Банк номи</th><th class="n">Лойиҳа</th><th class="n">Кредит</th><th class="n">Молиял.</th><th class="n">Тушган</th><th class="n">Тушмаган</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
+
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--green),var(--cyan))">4</div><div class="st">Тармоқлар кесимидаги таҳлил</div></div>
+<div class="g2" style="margin-bottom:16px"><div class="cd"><div class="ct">Топ-10 кредит (млрд)</div><div class="cb"><canvas id="cSC"></canvas></div></div>
+<div class="cd"><div class="ct">NPL таҳлили</div><div class="cb"><canvas id="cSN"></canvas></div></div></div>
+<div class="cd"><div class="ct">Батафсил маълумот</div><div style="overflow-x:auto"><table class="dt" id="tS"><thead><tr><th>Тармоқ</th><th class="n">Лойиҳа</th><th class="n">Кредит</th><th class="n">Қолд.</th><th class="n">Қолдиқ</th><th class="n">NPL</th><th class="n">NPL сум</th><th class="n">NPL%</th></tr></thead><tbody></tbody></table></div></div></div>
+
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--red),var(--amber))">5</div><div class="st">Марказий банк раиси топшириғи — муаммоларни бартараф этиш</div></div>
+<div class="cd" style="margin-bottom:16px"><div class="ct">Динамика</div><div class="tl" id="tlBox"></div></div>
+<div class="g2"><div class="cd"><div class="ct">NPL динамикаси (млрд)</div><div class="cbs"><canvas id="cNT"></canvas></div></div>
+<div class="cd"><div class="ct">Дебитор динамикаси (сони)</div><div class="cbs"><canvas id="cDT"></canvas></div></div></div></div>
+
+<div class="sec"><div class="sh"><div class="sn" style="background:linear-gradient(135deg,var(--amber),var(--red))">6</div><div class="st">Муаммоли йўналишлар ва тавсиялар</div></div>
+<div class="g2" style="margin-bottom:18px"><div class="cd" style="border-left:3px solid var(--red)" id="prC"></div><div class="cd" style="border-left:3px solid var(--green)" id="poC"></div></div>
+<div id="rcB"></div></div>
+
+</div>
+<div class="footer">Самарқанд вилояти ҳудудий дастурлар мониторинги · Маълумот манбаи: Марказий банк ҳудудий бошқармаси</div>
 </div>
 
 <script>
+// ╔══════════════════════════════════════════════════════╗
+// ║  ⚙️ SOZLAMALAR — FAQAT SHU IKKI QATORNI O'ZGARTIRING ║
+// ╚══════════════════════════════════════════════════════╝
 
-// ELEMENTLAR
-const loginDiv = document.getElementById("login");
-const appDiv = document.getElementById("app");
-const loginBtn = document.getElementById("loginBtn");
+const SHEET_ID = '1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM';          // ← GOOGLE SHEET ID NI SHU YERGA KIRITING
+const PASSWORD = 'samarqand2026';  // ← PAROL
 
-// LOGIN EVENT
-loginBtn.addEventListener("click", function(){
-  const u = document.getElementById("user").value;
-  const p = document.getElementById("pass").value;
+// ┌──────────────────────────────────────────────────────┐
+// │ GOOGLE SHEET TAYYORLASH QADAMLARI:                   │
+// │                                                      │
+// │ 1. Excel faylni Google Drive ga yuklang               │
+// │ 2. Google Sheets da oching                            │
+// │ 3. File → Share → Publish to web →                    │
+// │    "Entire Document" → "Web page" → Publish           │
+// │ 4. Sheet URL dan ID ni ko'chiring:                    │
+// │    https://docs.google.com/spreadsheets/d/<<<ID>>>/   │
+// │ 5. Yuqoridagi SHEET_ID ga o'sha ID ni yozing          │
+// │ 6. index.html ni GitHub repo ga yuklang                │
+// │ 7. Settings → Pages → Source: main → Save              │
+// │ 8. Tayyor! https://username.github.io/repo/            │
+// └──────────────────────────────────────────────────────┘
 
-  if(u === "admin" && p === "12345"){
-    startApp();
-  } else {
-    alert("Login yoki parol noto‘g‘ri");
+document.getElementById('pi').addEventListener('keydown',e=>{if(e.key==='Enter')chkP()});
+function chkP(){
+  if(document.getElementById('pi').value===PASSWORD){
+    document.getElementById('lockScreen').style.display='none';go();
+  }else{
+    const e=document.getElementById('pe');e.style.display='block';
+    document.getElementById('pi').value='';setTimeout(()=>e.style.display='none',3000);
   }
-});
-
-// APP START
-function startApp(){
-  loginDiv.style.display = "none";
-  appDiv.classList.remove("hidden");
-  loadData();
+}
+function go(){
+  const ls=document.getElementById('loadScr');ls.classList.add('on');
+  if(!SHEET_ID){
+    document.getElementById('lds').textContent='';
+    const e=document.getElementById('lde');e.style.display='block';
+    e.innerHTML='❌ <b>SHEET_ID kiritilmagan!</b><br><br>index.html faylini oching va yuqoridagi <code>const SHEET_ID = \'\';</code> qatoriga Google Sheet ID kiriting.<br><br>Masalan: <code>const SHEET_ID = \'1BxiMVs0XRA5nFMdKvBd...\';</code>';
+    return;
+  }
+  load();
+}
+async function load(){
+  try{
+    document.getElementById('lds').textContent='Google Sheets ga ulanilmoqda...';
+    const r=await fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`);
+    const t=await r.text();
+    const m=t.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);?\s*$/);
+    if(!m)throw new Error('Sheet javobini o\'qib bo\'lmadi. "Publish to web" qilinganligini tekshiring.');
+    const j=JSON.parse(m[1]);
+    if(!j.table||!j.table.rows)throw new Error('Ma\'lumot topilmadi');
+    document.getElementById('lds').textContent='Tahlil qilinmoqda...';
+    const D=parse(j.table.rows);
+    document.getElementById('loadScr').classList.remove('on');
+    document.getElementById('dashboard').style.display='block';
+    render(D);
+  }catch(e){
+    document.getElementById('lds').textContent='';
+    const el=document.getElementById('lde');el.style.display='block';
+    el.innerHTML=`❌ <b>Xatolik:</b> ${e.message}<br><br>1. SHEET_ID to'g'rimi?<br>2. "Publish to web" qilinganmi?<br>3. Internet bormi?`;
+  }
 }
 
-// GOOGLE SHEETS
-const SHEET_ID = "1l3vEaGx-Ij0iqvHHW8mFE9-tLSOPIQcs8x1DITJECxM";
-const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+function cv(c){return c&&c.v!=null?c.v:null}
+function cn(c){const v=cv(c);return v!=null?Number(v):0}
+function pf(v){return v!=null&&Math.abs(v)<1?v*100:(v||0)}
 
-// DATA LOAD
-function loadData(){
+function parse(rows){
+  function R(i){return rows[i]&&rows[i].c?rows[i].c:[]}
 
-fetch(URL)
-.then(res => res.text())
-.then(text => {
+  // Row 2 = viloyat umumiy
+  const vr=R(2);
+  const V={total:cn(vr[2]),totalSum:cn(vr[3]),fin:cn(vr[4]),finSum:cn(vr[5]),bank:cn(vr[6]),bankSum:cn(vr[7]),
+    stopped:cn(vr[8]),stoppedSum:cn(vr[9]),prospect:cn(vr[10]),prospectSum:cn(vr[11]),
+    plan26:cn(vr[12]),plan26Sum:cn(vr[13]),crSoni:cn(vr[14]),crSum:cn(vr[15]),
+    npl:cn(vr[16]),nplSum:cn(vr[17]),nplPct:pf(cn(vr[18])),
+    launched:cn(vr[19]),launchedSum:cn(vr[20]),notL:cn(vr[21]),notLSum:cn(vr[22])};
 
-  const json = JSON.parse(text.substr(47).slice(0,-2));
-  const rows = json.table.rows;
+  // Rows 7-22 = tumanlar (16 ta)
+  const T=[];
+  for(let i=7;i<=22;i++){const c=R(i);if(!cv(c[1]))continue;
+    T.push({nm:cv(c[1]),tot:cn(c[2]),cr:cn(c[3]),fin:cn(c[4]),fS:cn(c[5]),bk:cn(c[6]),bS:cn(c[7]),
+      st:cn(c[8]),cqS:cn(c[14]),cqSm:cn(c[15]),npl:cn(c[16]),nplS:cn(c[17]),nplP:pf(cn(c[18])),
+      la:cn(c[19]),laS:cn(c[20]),nl:cn(c[21]),nlS:cn(c[22])});}
 
-  let data = [];
+  // Rows 26-36 = banklar (11 ta)
+  const B=[];
+  for(let i=26;i<=36;i++){const c=R(i);if(!cv(c[1]))continue;
+    B.push({nm:cv(c[1]),tot:cn(c[2]),cr:cn(c[3]),fin:cn(c[4]),fS:cn(c[5]),bk:cn(c[6]),bS:cn(c[7]),
+      st:cn(c[8]),cqS:cn(c[14]),cqSm:cn(c[15]),npl:cn(c[16]),nplS:cn(c[17]),nplP:pf(cn(c[18])),
+      la:cn(c[19]),laS:cn(c[20]),nl:cn(c[21]),nlS:cn(c[22])});}
 
-  rows.forEach(r => {
+  // Rows 40-68 = tarmoqlar (29 ta, cols 2-8)
+  const S=[];
+  for(let i=40;i<=68;i++){const c=R(i);if(!cv(c[1]))continue;
+    S.push({nm:cv(c[1]),pr:cn(c[2]),cr:cn(c[3]),qS:cn(c[4]),qSm:cn(c[5]),
+      npl:cn(c[6]),nplS:cn(c[7]),nplP:pf(cn(c[8]))});}
 
-    let obj = {
-      name: r.c[0]?.v || "N/A",
-      status: r.c[5]?.v || "",
-      amount: parseFloat(r.c[3]?.v) || 0
-    };
+  // Rows 73-77 = muammolar (5 ta)
+  const M=[];
+  for(let i=73;i<rows.length&&i<=77;i++){const c=R(i);if(!cv(c[1]))continue;
+    M.push({lb:cv(c[1]),sot:cn(c[2]),sotK:cn(c[3]),tsh:cn(c[4]),tshK:cn(c[5]),
+      pul:cn(c[6]),pulK:cn(c[7]),deb:cn(c[8]),debS:cn(c[9]),
+      krd:cn(c[10]),krdS:cn(c[11]),npl:cn(c[12]),oil:cn(c[13]),ryx:cn(c[14]),fao:cn(c[15])});}
 
-    // AI PREDICTION
-    let pd = 0;
+  return{V,T,B,S,M};
+}
 
-    if(obj.status.includes("ишга тушмаган")) pd += 40;
-    if(obj.status.includes("кечик")) pd += 25;
-    if(obj.amount > 1000000000) pd += 15;
+// ══════ RENDER ══════
+Chart.defaults.color='#64748b';Chart.defaults.borderColor='rgba(226,232,240,.5)';
+Chart.defaults.font.family="'Inter',sans-serif";Chart.defaults.font.size=11;
+const F=(n,d)=>d?Number(n).toFixed(d):Number(n).toLocaleString('uz');
 
-    obj.pd = pd;
+function render(D){
+  const V=D.V;
+  const fp=V.total?((V.fin/V.total)*100).toFixed(1):0;
+  const lp=V.fin?((V.launched/V.fin)*100).toFixed(1):0;
 
-    obj.level =
-      pd > 60 ? "HIGH" :
-      pd > 30 ? "MEDIUM" : "LOW";
+  document.getElementById('kpiS').innerHTML=
+    kpi('📋','rgba(37,99,235,.1)','var(--accent)',V.total,'Жами лойиҳалар',`Кредит: ${F(V.totalSum,1)} млрд`)+
+    kpi('✅','rgba(5,150,105,.1)','var(--green)',V.fin,'Молиялаштирилган',`${F(V.finSum,1)} млрд · <span style="color:var(--green)">${fp}%</span>`)+
+    kpi('🏦','rgba(8,145,178,.1)','var(--cyan)',V.bank,'Банк кредити',`${F(V.bankSum,1)} млрд`)+
+    kpi('🚀','rgba(217,119,6,.1)','var(--amber)',V.launched,'Ишга туширилган',`${F(V.launchedSum,1)} млрд · <span style="color:var(--green)">${lp}%</span>`)+
+    kpi('⚠️','rgba(220,38,38,.1)','var(--red)',V.npl,'NPL',`${F(V.nplSum,1)} млрд · <span style="color:var(--red)">${F(V.nplPct,1)}%</span>`)+
+    kpi('📈','rgba(79,70,229,.1)','var(--accent2)',V.plan26,'2026 й. режа',`${F(V.plan26Sum,1)} млрд`);
 
-    data.push(obj);
+  document.getElementById('kpiX').innerHTML=
+    mini('Тўхтатилган',V.stopped,V.stoppedSum,'var(--amber)')+
+    mini('Истиқболли',V.prospect,V.prospectSum,'var(--cyan)')+
+    mini('Ишга тушмаган',V.notL,V.notLSum,'var(--red)');
+
+  // Tumanlar
+  const ts=[...D.T].sort((a,b)=>b.tot-a.tot);
+  barH('cTP',ts.map(t=>t.nm),ts.map(t=>t.tot),'rgba(37,99,235,.7)');
+  const tc=[...D.T].sort((a,b)=>b.cr-a.cr).slice(0,10);
+  barH('cTC',tc.map(t=>t.nm),tc.map(t=>t.cr),'rgba(8,145,178,.7)');
+  tblFull('tT',D.T);
+
+  // Banklar
+  const bs=[...D.B].sort((a,b)=>b.tot-a.tot);
+  const bCol=['#2563eb','#4f46e5','#7c3aed','#a855f7','#d946ef','#db2777','#e11d48','#dc2626','#ea580c','#d97706','#0891b2'];
+  new Chart(document.getElementById('cBP'),{type:'doughnut',
+    data:{labels:bs.map(b=>b.nm),datasets:[{data:bs.map(b=>b.tot),backgroundColor:bCol,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{padding:8,font:{size:10},boxWidth:12}}}}});
+  const bn=[...D.B].filter(b=>b.nplS>0).sort((a,b)=>b.nplS-a.nplS);
+  barH('cBN',bn.map(b=>b.nm),bn.map(b=>b.nplS),bn.map(b=>b.nplP>=4?'rgba(220,38,38,.7)':b.nplP>=2?'rgba(217,119,6,.7)':'rgba(5,150,105,.7)'));
+  tblFull('tB',D.B);
+
+  // Tarmoqlar
+  const sc=[...D.S].sort((a,b)=>b.cr-a.cr);
+  barH('cSC',sc.slice(0,10).map(s=>s.nm),sc.slice(0,10).map(s=>s.cr),'rgba(5,150,105,.7)');
+  const sn=[...D.S].filter(s=>s.nplS>0).sort((a,b)=>b.nplP-a.nplP).slice(0,12);
+  new Chart(document.getElementById('cSN'),{type:'bar',
+    data:{labels:sn.map(s=>s.nm),datasets:[
+      {label:'NPL(млрд)',data:sn.map(s=>s.nplS),backgroundColor:'rgba(220,38,38,.5)',borderRadius:4,barThickness:14},
+      {label:'NPL%',data:sn.map(s=>s.nplP),type:'line',borderColor:'#d97706',pointBackgroundColor:'#d97706',pointRadius:4,borderWidth:2,yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:10},boxWidth:10}}},
+      scales:{x:{grid:{display:false}},y:{grid:{color:'rgba(226,232,240,.4)'}},y1:{position:'right',grid:{display:false}}}}});
+  tblSec('tS',sc);
+
+  // Timeline + trends
+  tlRender(D.M);
+  trendCharts(D.M);
+
+  // Problems & recs
+  probRecs(V,D.M);
+}
+
+function kpi(icon,bg,col,val,label,sub){
+  return `<div class="kc"><div class="ki" style="background:${bg};color:${col}">${icon}</div><div class="kv">${F(val)}</div><div class="kl">${label}</div><div class="ks">${sub}</div></div>`;
+}
+function mini(label,val,sum,col){
+  return `<div class="cd" style="text-align:center"><div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">${label}</div><div style="font-size:30px;font-weight:800;color:${col};margin:6px 0">${F(val)}</div><div style="font-size:12px;color:var(--text2)">${F(sum,1)} млрд сўм</div></div>`;
+}
+function barH(id,labels,data,bg){
+  new Chart(document.getElementById(id),{type:'bar',data:{labels,datasets:[{data,backgroundColor:bg,borderRadius:4,barThickness:18}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(226,232,240,.4)'}},y:{grid:{display:false}}}}});
+}
+function tblFull(id,items){
+  const tb=document.querySelector(`#${id} tbody`);
+  [...items].sort((a,b)=>b.tot-a.tot).forEach(x=>{
+    const c=x.nplP>=4?'bad':x.nplP>=2?'hl':'gd';
+    tb.innerHTML+=`<tr><td><b>${x.nm}</b></td><td class="n">${F(x.tot)}</td><td class="n">${F(x.cr,1)}</td><td class="n">${F(x.fin)}</td><td class="n gd">${F(x.la)}</td><td class="n ${x.nl>5?'bad':''}">${x.nl}</td><td class="n">${x.npl}</td><td class="n">${F(x.nplS,1)}</td><td class="n ${c}">${F(x.nplP,1)}%</td></tr>`;
   });
+}
+function tblSec(id,items){
+  const tb=document.querySelector(`#${id} tbody`);
+  items.forEach(s=>{
+    const c=s.nplP>=7?'bad':s.nplP>=3?'hl':'gd';
+    tb.innerHTML+=`<tr><td><b>${s.nm}</b></td><td class="n">${F(s.pr)}</td><td class="n">${F(s.cr,1)}</td><td class="n">${s.qS}</td><td class="n">${F(s.qSm,1)}</td><td class="n">${s.npl}</td><td class="n">${F(s.nplS,1)}</td><td class="n ${c}">${F(s.nplP,1)}%</td></tr>`;
+  });
+}
+function tlRender(M){
+  const el=document.getElementById('tlBox');let h='';
+  M.forEach(m=>{
+    h+=`<div class="ti"><div class="td">${m.lb}</div><div class="tc"><div class="tg">
+      <div class="tm"><div class="v" style="color:${m.sot?'var(--amber)':'var(--text2)'}">${m.sot||'—'}</div><div class="l">Сотилмаган</div></div>
+      <div class="tm"><div class="v" style="color:${m.pul?'var(--amber)':'var(--text2)'}">${m.pul||'—'}</div><div class="l">Пул тушуми йўқ</div></div>
+      <div class="tm"><div class="v" style="color:${m.deb?'var(--red)':'var(--text2)'}">${m.deb?F(m.deb):'—'}</div><div class="l">Дебитор</div></div>
+      <div class="tm"><div class="v" style="color:${m.krd?'var(--red)':'var(--text2)'}">${m.krd?F(m.krd):'—'}</div><div class="l">Кредитор</div></div>
+      <div class="tm"><div class="v" style="color:${m.npl?'var(--amber)':'var(--text2)'}">${m.npl||'—'}</div><div class="l">NPL (млрд)</div></div>
+      <div class="tm"><div class="v" style="color:${m.oil?'var(--amber)':'var(--text2)'}">${m.oil||'—'}</div><div class="l">Оилавий (млрд)</div></div>
+    </div></div></div>`;
+  });el.innerHTML=h;
+}
+function trendCharts(M){
+  const nv=M.filter(m=>m.npl>0);
+  if(nv.length) new Chart(document.getElementById('cNT'),{type:'line',data:{labels:nv.map(n=>n.lb.substring(0,10)),datasets:[{data:nv.map(n=>n.npl),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.08)',fill:true,tension:.3,pointRadius:6,pointBackgroundColor:'#dc2626',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(226,232,240,.4)'}},x:{grid:{display:false}}}}});
+  const dv=M.filter(m=>m.deb>0);
+  if(dv.length) new Chart(document.getElementById('cDT'),{type:'line',data:{labels:dv.map(d=>d.lb.substring(0,10)),datasets:[{data:dv.map(d=>d.deb),borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.08)',fill:true,tension:.3,pointRadius:6,pointBackgroundColor:'#d97706',borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,grid:{color:'rgba(226,232,240,.4)'}},x:{grid:{display:false}}}}});
+}
+function probRecs(V,M){
+  const last=M.length?M[M.length-1]:{};
+  const fp=V.total?((V.fin/V.total)*100).toFixed(1):0;
+  const lp=V.fin?((V.launched/V.fin)*100).toFixed(1):0;
+  document.getElementById('prC').innerHTML=`<div class="ct" style="color:var(--red)">🔴 Асосий муаммолар</div><div style="font-size:13px;line-height:1.8">
+    <p><b>1.</b> Дебитор: ${last.deb?F(last.deb):''} корхона, ${F(last.debS||0,0)} млн $</p>
+    <p style="margin-top:6px"><b>2.</b> Кредитор: ${last.krd?F(last.krd):''} корхона, ${F(last.krdS||0,1)} млн $</p>
+    <p style="margin-top:6px"><b>3.</b> NPL: ${F(V.npl)} та, ${F(V.nplSum,1)} млрд (${F(V.nplPct,1)}%)</p>
+    <p style="margin-top:6px"><b>4.</b> Сотилмаган: ${last.sot||0} хонадон, ${F(last.sotK||0,1)} млрд</p>
+    <p style="margin-top:6px"><b>5.</b> Пул тушуми йўқ: ${last.pul||0} та (${F(last.pulK||0,1)} млрд)</p>
+    <p style="margin-top:6px"><b>6.</b> Оилавий: ${F(last.oil||0,1)} млрд сўм қарздорлик</p>
+    <p style="margin-top:6px"><b>7.</b> Ишга тушмаган: ${F(V.notL)} та (${F(V.notLSum,1)} млрд)</p></div>`;
 
-  renderDashboard(data);
+  document.getElementById('poC').innerHTML=`<div class="ct" style="color:var(--green)">✅ Ижобий натижалар</div><div style="font-size:13px;line-height:1.8">
+    <p><b>1.</b> Молиялаштириш: ${F(V.fin)}/${F(V.total)} (${fp}%)</p>
+    <p style="margin-top:6px"><b>2.</b> Ишга тушириш: ${F(V.launched)} та (${lp}%)</p>
+    <p style="margin-top:6px"><b>3.</b> 2026 режа: ${F(V.plan26)} лойиҳа, ${F(V.plan26Sum,1)} млрд</p>
+    <p style="margin-top:6px"><b>4.</b> Истиқболли: ${F(V.prospect)} та, ${F(V.prospectSum,1)} млрд</p>
+    ${M.length>=2?`<p style="margin-top:6px"><b>5.</b> Камайтирилган: дебитор ${M[1].deb?F(M[1].deb):'—'}, кредитор ${M[1].krd?F(M[1].krd):'—'}</p>`:''}</div>`;
 
-})
-.catch(err => {
-  alert("Google Sheets ulanmagan yoki noto‘g‘ri ID");
-  console.error(err);
-});
-
+  document.getElementById('rcB').innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:12px;color:var(--cyan)">💡 Тавсиялар</div>
+    <div class="rc"><span class="rn">1</span><b>Ташқи савдо:</b> Кредитор қарздор корхоналар учун штаб тузиш ва ойлик мониторинг.</div>
+    <div class="rc"><span class="rn">2</span><b>NPL:</b> Юқори NPL ли тармоқларда реструктуризация дастурлари.</div>
+    <div class="rc"><span class="rn">3</span><b>Ишга тушмаган ${F(V.notL)} лойиҳа:</b> Ҳар бири учун йўл харитаси, 2026 II чоракгача ишга тушириш.</div>
+    <div class="rc"><span class="rn">4</span><b>Сотилмаган хонадонлар:</b> Нарх оптималлаш, ипотека имтиёзлари.</div>
+    <div class="rc"><span class="rn">5</span><b>Оилавий тадбиркорлик:</b> ${F(last.oil||0,1)} млрд қарзни камайтириш учун индивидуал режа.</div>
+    <div class="rc"><span class="rn">6</span><b>Кам лойиҳали туманларда</b> янги лойиҳалар жалб қилишни кучайтириш.</div>`;
 }
 
-// RENDER
-function renderDashboard(data){
-
-const kpiDiv = document.getElementById("kpi");
-const table = document.getElementById("table");
-
-// KPI
-const total = data.length;
-const high = data.filter(x => x.level === "HIGH").length;
-
-kpiDiv.innerHTML = `
-  <div class="card">Total: ${total}</div>
-  <div class="card red">High Risk: ${high}</div>
-  <div class="card">Share: ${(high/total*100).toFixed(1)}%</div>
-`;
-
-// CHART
-new Chart(document.getElementById("chart"), {
-  type: "bar",
-  data: {
-    labels: ["LOW","MEDIUM","HIGH"],
-    datasets: [{
-      data: [
-        data.filter(x=>x.level==="LOW").length,
-        data.filter(x=>x.level==="MEDIUM").length,
-        data.filter(x=>x.level==="HIGH").length
-      ]
-    }]
-  }
-});
-
-// TOP 10
-let top = data.sort((a,b)=>b.pd-a.pd).slice(0,10);
-
-table.innerHTML = `
-<tr>
-<th>Project</th>
-<th>PD %</th>
-<th>Risk</th>
-</tr>
-`;
-
-top.forEach(x => {
-  let color =
-    x.level==="HIGH" ? "red" :
-    x.level==="MEDIUM" ? "yellow" : "green";
-
-  table.innerHTML += `
-  <tr>
-    <td>${x.name}</td>
-    <td>${x.pd}%</td>
-    <td class="${color}">${x.level}</td>
-  </tr>
-  `;
-});
-
+async function dlPDF(){
+  const o=document.getElementById('pov');o.classList.add('on');
+  try{const{jsPDF}=window.jspdf,pdf=new jsPDF('p','mm','a4'),el=document.getElementById('mc'),
+    c=await html2canvas(el,{scale:1.5,useCORS:true,backgroundColor:'#f0f4f8',logging:false,windowWidth:1440}),
+    img=c.toDataURL('image/jpeg',.92),pW=pdf.internal.pageSize.getWidth(),pH=pdf.internal.pageSize.getHeight(),
+    iW=pW-16,iH=(c.height*iW)/c.width;let left=iH,pos=8;
+    pdf.addImage(img,'JPEG',8,pos,iW,iH);left-=(pH-16);
+    while(left>0){pos-=pH-8;pdf.addPage();pdf.addImage(img,'JPEG',8,pos,iW,iH);left-=(pH-16);}
+    pdf.save('Samarqand_Hisobot.pdf');
+  }catch(e){alert('PDF xatolik: '+e.message)}o.classList.remove('on');
 }
-
 </script>
-
 </body>
 </html>
